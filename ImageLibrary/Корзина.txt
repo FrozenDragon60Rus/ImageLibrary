@@ -1,9 +1,0 @@
-/*string[] tag = { "high_heels", "thigh_boots", "wedge_heels", "gloves", "long_gloves",
-                 "neko", "fox_girl", "wolf_girl", "animal_girl", "boobs", "bunny_suit",
-                 "army", "witch", "spy", "elves", "rape", "nun", "latex", "futanary",
-                 "princess", "succubus", "loli", "nurse", "wedding", "dress", "android", 
-                 "kunoichi", "manga", "scifi", "muscle", "zoo", "goblin", "ork", "monster",
-                 "office_suit" , "magical_girl", "maid", "robot", "glasses", "less_heels",
-                 "indians", "fairy", "seafarer", "race_queen", "mecha", "cat_suit", 
-                 "super_hero", "animal_ear", "police", "kimono", "fuck", "angel", "steampunk",
-                 "stockings", "hentai", "christmas", "school"}*/

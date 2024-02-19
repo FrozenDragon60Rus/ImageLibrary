@@ -396,3 +396,8 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/ImageDB/DBControl (2).cs
+/ImageDB/Image.db
+/ImageDB/reserv.txt
+/ImageLibrary/Binary/DataBase.cs
+/ImageLibrary/Корзина.txt
