@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ImageDB.Properties {
+namespace ImageLibrary.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

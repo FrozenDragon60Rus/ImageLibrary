@@ -1,8 +1,8 @@
-﻿<Application x:Class="ImageDB.App"
+﻿<Application x:Class="ImageLibrary.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:ImageDB"
-             StartupUri="DB.xaml">
+             xmlns:local="clr-namespace:MyImageLibrary"
+             StartupUri="ImageLibrary.xaml">
     <Application.Resources>
          
     </Application.Resources>
