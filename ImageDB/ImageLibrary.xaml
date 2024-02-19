@@ -1,0 +1,32 @@
+﻿<Window x:Class="MyImageLibrary.ImageLibrary"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MyImageLibrary"
+        mc:Ignorable="d"
+        Title="ImageLibrary" Height="450" Width="826.613" ResizeMode="NoResize" WindowState="Maximized" Loaded="Window_Loaded">
+    <Grid Name="Main">
+        <GroupBox Name="BorderGroup" HorizontalAlignment="Left" Height="354" Margin="10,10,0,0" VerticalAlignment="Top" Width="800" Visibility="Hidden">
+            <Grid Name="ImageGroup" Margin="2,8,-2,2">
+
+            </Grid>
+        </GroupBox>
+        <GroupBox Name="TagsBox" HorizontalAlignment="Left" Height="354" Margin="10,10,0,0" VerticalAlignment="Top" Width="800" Visibility="Visible">
+            <Grid Name="TagsGroup" Margin="2,8,-2,2">
+
+            </Grid>
+        </GroupBox>
+        <Image Name="LeftPage" HorizontalAlignment="Left" Margin="10,0,0,12" Width="33" Height="33" MouseLeftButtonUp="LeftPage_MouseLeftButtonUp" Source="Resources/Left.png" VerticalAlignment="Bottom"/>
+        <Image Name="RightPage" HorizontalAlignment="Right" Margin="0,0,10,12" Width="33" Height="33" MouseLeftButtonUp="RightPage_MouseLeftButtonUp" Source="Resources/Right.png" VerticalAlignment="Bottom"/>
+        <TextBox Name="FindImage" HorizontalAlignment="Center" Margin="0,0,0,14" TextWrapping="Wrap" Width="378" KeyUp="TextBox_KeyUp" Height="30" VerticalAlignment="Bottom" Visibility="Hidden" IsEnabled="False"/>
+        <Button Name="ShowTags" HorizontalAlignment="Center" Margin="0,0,0,14" Width="378" Content="Ключевые слова" Height="30" VerticalAlignment="Bottom" BorderThickness="2" BorderBrush="Black" Background="White" Click="ShowTags_Click" >
+            <Button.Effect>
+                <DropShadowEffect BlurRadius="6" />
+            </Button.Effect>
+        </Button>
+        <Grid Name="Viewer" Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center">
+        </Grid>
+    </Grid>
+    
+</Window>
