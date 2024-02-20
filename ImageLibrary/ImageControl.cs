@@ -57,26 +57,31 @@ namespace ImageLibrary
 
         public void Draw(int num, Vector size)
         {
-            Image img = new Image(), 
-                  bg = new Image();
-
-            img.Source = Images[num].Source;
+            Image img, bg;
 
             BitmapImage bi = new BitmapImage();
             bi.BeginInit();
             bi.UriSource = new Uri(Directory.GetCurrentDirectory() + @"\bg.png");
             bi.EndInit();
-            bg.Source = bi;
-            bg.Width = size.X;
-            bg.Height = size.Y;
 
-            Vector imageSize = Resize(new Vector(img.Source.Width, img.Source.Height), new Vector(size.X, size.Y));
-            img.Stretch = Stretch.UniformToFill;
-            img.Width = imageSize.X;
-            img.Height = imageSize.Y;
-            img.VerticalAlignment = VerticalAlignment.Center;
-            img.HorizontalAlignment = HorizontalAlignment.Center;
-            img.MouseUp += ImageClose;
+            bg = new Image()
+            {
+                Source = bi,
+                Width = size.X,
+                Height = size.Y
+            };
+
+            Vector imageSize = Resize(new Vector(Images[num].Source.Width, Images[num].Source.Height),
+                                      new Vector(size.X, size.Y));
+            img = new Image()
+            {
+                Source = Images[num].Source,
+                Stretch = Stretch.UniformToFill,
+                Width = imageSize.X,
+                Height = imageSize.Y,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+            }; img.MouseUp += ImageClose;
 
             Viewer.Children.Add(bg);
             Viewer.Children.Add(img);
