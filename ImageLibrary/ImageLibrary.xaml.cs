@@ -98,29 +98,28 @@ namespace MyImageLibrary
             double imageMarginX = 2, imageMarginY = 2;
             imageControl.Images = new Image[imageOnPage];
             Vector size = imageSize;
+            Image img;
 
             for (int i = 0; i < imageOnPage; i++)
             {
-                Image img = new Image();
-
-                img.MouseUp += PreviewImageClick;
-
                 int row = i % countOnLine,
                     col = i % imageRow,
                     rowOffset = (int)(row * size.X + (row * imageMarginX)),
                     colOffset = (int)(col * size.Y + (col * imageMarginY));
-
                 //Console.WriteLine(i + ") " + rowOffset + " " + colOffset);
 
-                img.Margin = new Thickness(rowOffset,
+                img = new Image()
+                {
+                    Margin = new Thickness(rowOffset,
                                            colOffset,
                                            imageMarginX,
-                                           imageMarginY);
-
-                img.Stretch = Stretch.UniformToFill;
-                img.HorizontalAlignment = HorizontalAlignment.Left;
-                img.VerticalAlignment = VerticalAlignment.Top;
-                img.Tag = i;
+                                           imageMarginY),
+                    Stretch = Stretch.UniformToFill,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Tag = i
+                };
+                img.MouseUp += PreviewImageClick;
                 imageControl.Images[i] = img;
                 ImageGroup.Children.Add(imageControl.Images[i]);
             }
@@ -141,23 +140,24 @@ namespace MyImageLibrary
         }
         private Button TagButton(string name, int num)
         {
-            Button b = new Button();
-            b.Name = name + "_button";
-            b.Content = name;
-            b.Background = Brushes.White;
-            b.FontSize = 11f;
-            b.HorizontalAlignment = HorizontalAlignment.Left;
-            b.VerticalAlignment = VerticalAlignment.Top;
-            b.Width = 250;
-            b.Height = 30;
+            Button b = new Button()
+            {
+                Name = name + "_button",
+                Content = name,
+                Background = Brushes.White,
+                FontSize = 11f,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+                Width = 250,
+                Height = 30
+            };
             int imageOnLine = (int)Math.Truncate(TagsBox.Width / b.Width),
                 row = (int)Math.Truncate((double)num / imageOnLine),
                 col = num % imageOnLine;
-            
-            b.Margin = new Thickness(5 * (col + 1) + b.Width * col, 
-                                     5 * (row + 1) + b.Height * row, 
-                                     0, 0);
 
+            b.Margin = new Thickness(5 * (col + 1) + b.Width * col,
+                                     5 * (row + 1) + b.Height * row,
+                                     0, 0);
             b.Click += Check_tag;
             return b;
 

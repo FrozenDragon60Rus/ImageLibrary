@@ -96,7 +96,7 @@ namespace ImageLibrary
             {
                 BitmapImage bi = new BitmapImage();
                 bi.BeginInit();
-                Console.WriteLine(imageName[i]);
+                //Console.WriteLine(imageName[i]);
                 bi.UriSource = new Uri(imageName[i]);
                 try
                 {

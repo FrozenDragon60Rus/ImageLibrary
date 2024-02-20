@@ -56,13 +56,15 @@ namespace ImageDB
                 ImageData.Columns.Add(column);
             }
         }
-        
+
         private ListBox CustomListBox()
         {
-            ListBox l = new ListBox();
-            l.Width = 100;
-            l.Height = 100;
-            l.Margin = new Thickness(0, 0, 0, 0);
+            ListBox l = new ListBox()
+            {
+                Width = 100,
+                Height = 100,
+                Margin = new Thickness(0, 0, 0, 0)
+            };
             return l;
         }
 
@@ -73,21 +75,21 @@ namespace ImageDB
 
         private Button TagButton(string name, int num)
         {
-            Button b = new Button();
-            b.Name = name + "_button";
-            b.Content = name;
-            b.Background = Brushes.White;
-            b.FontSize = 16f;
-            b.HorizontalAlignment = HorizontalAlignment.Left;
-            b.VerticalAlignment = VerticalAlignment.Top;
-            b.Width = 250;
-            b.Height = 30;
-
-            b.Margin = new Thickness(5,
-                                     (5 + b.Height) * num,
-                                     0, 
-                                     0);
-
+            Button b = new Button()
+            {
+                Name = name + "_button",
+                Content = name,
+                Background = Brushes.White,
+                FontSize = 16f,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+                Width = 250,
+                Height = 30,
+                Margin = new Thickness(5,
+                                       (5 + Height) * num,
+                                       0,
+                                       0),
+            };
             b.Click += AddTagEvent;
             b.MouseRightButtonUp += RemoveTagEvent;
 
@@ -217,41 +219,42 @@ namespace ImageDB
 
         private void ImageData_KeyUp(object sender, KeyEventArgs e)
         {
-            if (ImageData.CurrentCell.Column.Header.ToString() != "Tag") return;
+            string marker = "Tag";
+            if (ImageData.CurrentCell.Column.Header.ToString() != marker) return;
             switch (e.Key)
             {
                 case Key.Delete:
-                    TableList[num].parameter["Tag"] = string.Empty;
+                    TableList[num].parameter[marker] = string.Empty;
                     ImageData.Items.Refresh();
                     break;
                 case Key.Back:
-                    int pos = (TableList[num].parameter["Tag"] as string).LastIndexOf(";");
+                    int pos = (TableList[num].parameter[marker] as string).LastIndexOf(";");
                     if (pos < 0)
                     {
-                        TableList[num].parameter["Tag"] = string.Empty;
+                        TableList[num].parameter[marker] = string.Empty;
                         break;
                     }
-                    TableList[num].parameter["Tag"] = (TableList[num].parameter["Tag"] as string).Remove(pos, (TableList[num].parameter["Tag"] as string).Length - pos);
+                    TableList[num].parameter[marker] = (TableList[num].parameter[marker] as string).Remove(pos, (TableList[num].parameter[marker] as string).Length - pos);
                     ImageData.Items.Refresh();
                     break;
                 case Key.C:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        buffer = (TableList[num].parameter["Tag"] as string);
+                        buffer = TableList[num].parameter[marker].ToString();
                     }
                     break;
                 case Key.V:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        TableList[num].parameter["Tag"] = buffer;
+                        TableList[num].parameter[marker] = buffer;
                         ImageData.Items.Refresh();
                     }
                     break;
                 case Key.X:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        buffer = (TableList[num].parameter["Tag"] as string);
-                        TableList[num].parameter["Tag"] = string.Empty;
+                        buffer = (TableList[num].parameter[marker] as string);
+                        TableList[num].parameter[marker] = string.Empty;
                         ImageData.Items.Refresh();
                     }
                     break;
