@@ -59,12 +59,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="MyConvert.cs" />
+    <Compile Include="SQL\Base.cs" />
     <Compile Include="SQL\Convert.cs" />
     <Compile Include="SQL\DataBase.cs" />
+    <Compile Include="SQL\ManyByMany.cs" />
     <Compile Include="Table\Data.cs" />
     <Compile Include="Table\Image.cs" />
     <Compile Include="SQL\Quary.cs" />
     <Compile Include="Table\Marker.cs" />
+    <Compile Include="TagButton.cs" />
     <Compile Include="XML\Info.cs" />
     <Page Include="DB.xaml">
       <Generator>MSBuild:Compile</Generator>

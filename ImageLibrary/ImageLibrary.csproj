@@ -65,6 +65,7 @@
     </Compile>
     <Compile Include="SearchParameter.cs" />
     <Compile Include="SQL\DataBase.cs" />
+    <Compile Include="TagButton.cs" />
     <Compile Include="VectorExtension.cs" />
     <Page Include="ImageLibrary.xaml">
       <Generator>MSBuild:Compile</Generator>

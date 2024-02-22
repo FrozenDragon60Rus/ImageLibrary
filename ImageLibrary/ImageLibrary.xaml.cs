@@ -138,55 +138,6 @@ namespace MyImageLibrary
         {
             Viewer.Children.Clear();
         }
-        private Button TagButton(string name, int num)
-        {
-            Button b = new Button()
-            {
-                Name = name + "_button",
-                Content = name,
-                Background = Brushes.White,
-                FontSize = 11f,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
-                Width = 250,
-                Height = 30
-            };
-            int imageOnLine = (int)Math.Truncate(TagsBox.Width / b.Width),
-                row = (int)Math.Truncate((double)num / imageOnLine),
-                col = num % imageOnLine;
-
-            b.Margin = new Thickness(5 * (col + 1) + b.Width * col,
-                                     5 * (row + 1) + b.Height * row,
-                                     0, 0);
-            b.Click += Check_tag;
-            return b;
-
-        }
-        private void FillTagButton()
-        {
-            DataBase tagDB = new DataBase("ImageLibrary", "Tag");
-            List<string> tag = tagDB.Load("Name");
-
-            //Array.Sort(tag, StringComparer.InvariantCulture);
-
-            for (int i = 0; i < tag.Count; i++)
-                TagsGroup.Children.Add(TagButton(tag[i], i));
-        }
-        private void Check_tag(object sender, RoutedEventArgs e)
-        {
-            Button b = sender as Button;
-            string item = b.Content.ToString();
-            if (b.Background == Brushes.White)
-            {
-                searchParameter.tag.Add(item);
-                b.Background = Brushes.Gray;
-            }
-            else
-            {
-                searchParameter.tag.Remove(item);
-                b.Background = Brushes.White;
-            }
-        }
 
         private void ShowTags_Click(object sender, RoutedEventArgs e)
         {
@@ -225,7 +176,7 @@ namespace MyImageLibrary
             imageControl = new ImageControl(ref Viewer);
             GroupSize();
             FillImageGrid();
-            FillTagButton();
+            new TagButton().Fill(TagsGroup, TagsBox.Width, ref searchParameter);
             Console.WriteLine(MaxImage);
         }
     }

@@ -14,27 +14,18 @@ using System.Windows.Markup;
 using System.ComponentModel.Design;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Windows.Controls.Primitives;
+using System.Diagnostics;
 
 namespace ImageDB.SQL
 {
-    internal class DataBase
+    public class DataBase : Base
     {
-        readonly string Name,
-                        Server = @"FROZENDRAGON\SQLSERV",
-                        Table,
-                        Primary;
-        string[] columns,
-                 Unique;
-        public string[] Columns { get => columns; }
-        readonly SqlConnection connection;
-        public ConnectionState State { get => connection.State; }
+        readonly string Primary;
+        string[] Unique;
+        
 
-        public DataBase(string name, string table)
+        public DataBase(string name, string table) : base(name, table)
         {
-            Name = name;
-            Table = table;
-            connection = Connect();
-            columns = ColumnName();
             Primary = GetByKeyName("PRIMARY KEY").First();
             Unique = GetByKeyName("UNIQUE");
         }
@@ -68,14 +59,6 @@ namespace ImageDB.SQL
                                   : key.ToArray();
         }
 
-        protected SqlConnection Connect() =>
-            new SqlConnection($"Server={Server}; " +
-                               "Integrated security=SSPI; " +
-                               "User=admin; " +
-                               "Password=admin; " +
-                              $"DataBase={Name}; " +
-                               "Trusted_Connection=False; " +
-                               "TrustServerCertificate=True; ");
         public void Add<T>(T table) where T : Data, new()
         {
             string commandText = $"INSERT INTO {Table} ";
@@ -93,6 +76,7 @@ namespace ImageDB.SQL
                 command.Parameters.AddWithValue(key, table.parameter[key]);
             Send(command);
         }
+        
         public void Add<T>(List<T> table) where T : Data, new()
         {
             foreach (string column in columns)
@@ -119,7 +103,7 @@ namespace ImageDB.SQL
                     SqlCommand command = new SqlCommand(commandTextHeader + commandText, connection);
 
                     foreach (string key in columns)
-                        command.Parameters.AddWithValue("@"+key, data.parameter[key].ToString());
+                        command.Parameters.AddWithValue("@" + key, data.parameter[key].ToString());
                     command.ExecuteNonQuery();
                 }
             }
@@ -130,21 +114,22 @@ namespace ImageDB.SQL
             }
             finally { connection.Close(); }
         }
-        public void Update<T>(T data) where T : Data
+        public void Add(int imageId, int markerId, string marker)
         {
-            string command = $"UPDATE {Table} " +
-                              "SET ";
-            Dictionary<string, object> db;
-            db = MyConvert.ArrayToDictionary(data.Key(), data.Value());
+            string commandText = $"MERGE INTO ImageBy{marker} \r\n" +
+                                 $"USING (SELECT {marker}_Id = {markerId}, Image_Id = {imageId}) as new \r\n" +
+                                 $"ON dbo.{Table}.Image_Id = new.Image_Id\r\n" +
+                                 $"AND dbo.{Table}.{marker}_Id = new.{marker}_Id\r\n" +
+                                  "WHEN MATCHED THEN\r\n" +
+                                  "DELETE\r\n" +
+                                  "WHEN NOT MATCHED THEN \r\n" +
+                                  "INSERT \r\n" +
+                                 $"VALUES ({imageId}, {markerId});";
 
-            foreach (string key in db.Keys)
-                command += $"{key} = {db[key]}, ";
-
-            command = command.Remove(command.Length - 2);
-
-            command += $" WHERE Id = {db["Id"]}";
-            Send(new SqlCommand(command, connection));
+            SqlCommand command = new SqlCommand(commandText, connection);
+            Send(command);
         }
+
         public void Load<T>(ref List<T> table) where T : Data, new()
         {
             connection.Open();
@@ -153,7 +138,7 @@ namespace ImageDB.SQL
 
             SqlCommand command = new SqlCommand(commandText, connection);
             T data;
-            using(SqlDataReader dataReader = command.ExecuteReader())
+            using (SqlDataReader dataReader = command.ExecuteReader())
             {
                 while (dataReader.Read())
                 {
@@ -163,13 +148,12 @@ namespace ImageDB.SQL
                         data.parameter.Add(key, dataReader[key]);
                     table.Add(data);
                 }
-                
+
             }
             connection.Close();
         }
         public void Load<T>(ref List<T> table, string[] join) where T : Data, new()
         {
-            connection.Open();
             string commandText = "SELECT ";
             commandText += Quary.Column(columns);
 
@@ -179,6 +163,7 @@ namespace ImageDB.SQL
 
             commandText += Quary.JoinTable(Table, join);
 
+            connection.Open();
             SqlCommand command = new SqlCommand(commandText, connection);
             T data;
             using (SqlDataReader dataReader = command.ExecuteReader())
@@ -192,9 +177,9 @@ namespace ImageDB.SQL
                 }
             connection.Close();
         }
-        public Dictionary<string, object> GetLineById(string[] join, int Id)
+        public Dictionary<string, object> LoadById(int Id, string[] join)
         {
-            connection.Open();
+            Dictionary<string, object> parameter = new Dictionary<string, object>();
             string commandText = "SELECT ";
             commandText += Quary.Column(columns);
 
@@ -203,33 +188,19 @@ namespace ImageDB.SQL
             commandText += $"\r\nFROM {Table} \r\n";
 
             commandText += Quary.JoinTable(Table, join);
+            commandText += $"\r\nWHERE Id = {Id}";
 
-            commandText += $"WHERE Id = {Id}";
-
+            connection.Open();
             SqlCommand command = new SqlCommand(commandText, connection);
-            Dictionary<string,object> value = new Dictionary<string,object>();
             using (SqlDataReader dataReader = command.ExecuteReader())
-            {
-                while (dataReader.Read())
+                if (dataReader.Read())
                     foreach (string key in columns.Concat(join))
-                        value.Add(key, dataReader[key]);
+                        parameter.Add(key, dataReader[key]);
 
-                connection.Close();
-            }
-            return value;
+            connection.Close();
+            return parameter;
         }
 
-        private void Send(SqlCommand command)
-        {
-            try
-            {
-                connection.Open();
-                command.ExecuteNonQuery();
-                Console.WriteLine($"{Table} database successfully recorded");
-            }
-            catch(Exception ex) { MessageBox.Show(ex.Message); }
-            finally { connection.Close(); }
-        }
         public void Refresh<T>(ref List<T> table, string name) where T : Data
         {
             string commandTextHeader = $"MERGE INTO {Table} \r\n",
@@ -273,13 +244,8 @@ namespace ImageDB.SQL
                     command.ExecuteNonQuery();
                 }
             }
-            catch(Exception ex) { MessageBox.Show(ex.Message); }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
             finally { connection.Close(); }
-        }
-        public void Update<T>(List<T> table) where T : Data, new()
-        {
-            Clear();
-            Add(table);
         }
 
         /// <summary>
@@ -289,11 +255,11 @@ namespace ImageDB.SQL
         /// <param name="folder">Адрес папки с файлами</param>
         /// <param name="name">Имя параметра формирующегося из папки</param>
         /// <param name="parameter">Значения столбцов по умолчанию</param>
-        public void FromFolder<T>(ref List<T> table, string folder, string name, Dictionary<string,object> parameter) where T : Data, new()
+        public void FromFolder<T>(ref List<T> table, string folder, string name, Dictionary<string, object> parameter) where T : Data, new()
         {
             string[] file = Directory.GetFiles(folder);
-            T data; 
-            foreach (var item in file) 
+            T data;
+            foreach (var item in file)
             {
                 data = new T();
                 data.parameter = parameter;
@@ -302,25 +268,26 @@ namespace ImageDB.SQL
             }
             Add(table);
         }
-        public void Clear()
+        public void Delete(int imageId, int markerId)
         {
-            string commandText = "DELETE FROM Image";
-            SqlCommand command = new SqlCommand(commandText, connection);
-            Send(command);
-        }
-        private string[] ColumnName()
-        {
-            List<string> column = new List<string>();
-            string commandText = $@"SELECT name FROM sys.dm_exec_describe_first_result_set('SELECT * FROM {Table}', NULL, 0) ;";
-            SqlCommand command = new SqlCommand(commandText, connection);
             connection.Open();
+            string commandText = "DELETE \r\n" +
+                                $"FROM {Table} \r\n" +
+                                $"WHERE Tag_Id = {markerId})\r\n" +
+                                $"AND Image_Id = {imageId}";
 
-            using (SqlDataReader dataReader = command.ExecuteReader())
-                while (dataReader.Read())
-                    column.Add(dataReader["name"].ToString());
-
+            SqlCommand command = new SqlCommand(commandText, connection);
             connection.Close();
-            return column.ToArray();
+        }
+        public void Delete(Data data)
+        {
+            connection.Open();
+            string commandText = "DELETE \r\n" +
+                                $"FROM {Table} \r\n" +
+                                $"WHERE Id = {data.parameter["Id"]})\r\n";
+
+            SqlCommand command = new SqlCommand(commandText, connection);
+            connection.Close();
         }
     }
 }
