@@ -80,27 +80,26 @@ namespace ImageDB.SQL
         
         public void Add<T>(List<T> table) where T : Data, new()
         {
-            foreach (string column in columns)
-                Console.WriteLine(column);
             if (table.Count == 0) return;
-            try
-            {
-                connection.Open();
-                string commandTextHeader = $"INSERT INTO {Table} ",
+
+            string commandTextHeader = $"INSERT INTO {Table} ",
                        commandText,
                        column,
                        value;
 
-                string[] keys = columns.Where(k => k != Primary).ToArray();
-                column = Quary.Column(keys);
-                value = Quary.Value(keys);
+            string[] keys = columns.Where(k => k != Primary).ToArray();
+            column = Quary.Column(keys);
+            value = Quary.Value(keys);
 
-                commandTextHeader += $"({column}) VALUES ";
+            commandTextHeader += $"({column}) VALUES ";
+
+            try
+            {
+                connection.Open();
 
                 foreach (T data in table)
                 {
                     commandText = $"({value}) ";
-                    //Console.WriteLine(commandTextHeader + commandText);
                     SqlCommand command = new SqlCommand(commandTextHeader + commandText, connection);
 
                     foreach (string key in columns)
