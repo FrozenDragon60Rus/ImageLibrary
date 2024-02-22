@@ -284,16 +284,27 @@ namespace ImageDB.SQL
             }
             Add(table);
         }
+        #region Delete
+        public void Delete(int imageId)
+        {
+            string commandText = "DELETE \r\n" +
+                                $"FROM {Table} \r\n" +
+                                $"WHERE Image_Id = {imageId}";
+
+            SqlCommand command = new SqlCommand(commandText, connection);
+            Send(command);
+        }
         public void Delete(int imageId, int markerId)
         {
             string commandText = "DELETE \r\n" +
                                 $"FROM {Table} \r\n" +
-                                $"WHERE Tag_Id = {markerId})\r\n" +
+                                $"WHERE Tag_Id = {markerId}\r\n" +
                                 $"AND Image_Id = {imageId}";
 
             SqlCommand command = new SqlCommand(commandText, connection);
             Send(command);
         }
+        
         public void Delete(Data data)
         {
             string commandText = "DELETE \r\n" +
@@ -315,5 +326,6 @@ namespace ImageDB.SQL
                 Send(command);
             }
         }
+        #endregion
     }
 }

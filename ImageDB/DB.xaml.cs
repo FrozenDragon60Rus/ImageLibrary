@@ -22,15 +22,13 @@ namespace ImageDB
         public readonly DataBase dataBase = new DataBase("ImageLibrary", "Image");
         public readonly string[] join = new string[] { "Tag", "Character", "Author" };
         string buffer = string.Empty;
-        private int selectRow = -1;
         public DB()
         {
             InitializeComponent();
 
+            Init();
             //Array.Sort(SeatchPatterns.Tag, StringComparer.InvariantCulture);
             new TagButton(this, "Tag").Fill();
-
-            Init();
         }
 
         public void Init()
@@ -57,22 +55,6 @@ namespace ImageDB
             }
         }
 
-        private ListBox CustomListBox()
-        {
-            ListBox l = new ListBox()
-            {
-                Width = 100,
-                Height = 100,
-                Margin = new Thickness(0, 0, 0, 0)
-            };
-            return l;
-        }
-
-        public void FindImage(string pattern = null)
-        {
-
-        }
-
         #region button_event
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -86,7 +68,6 @@ namespace ImageDB
                 dataBase.Load(ref TableList, join);
             }
             ImageData.Items.Refresh();
-            Console.WriteLine(ImageData.Items.Count);
         }
 
         private void Button_Refresh(object sender, RoutedEventArgs e)
@@ -99,7 +80,6 @@ namespace ImageDB
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
             if (currentItem == null) return;
-            //Console.WriteLine(currentItem.Name);
             TableList.Remove(currentItem);
             dataBase.Delete(currentItem);
             ImageData.Items.Refresh();
@@ -107,6 +87,8 @@ namespace ImageDB
         private void Button_Delete_KeyDown(object sender, KeyEventArgs e)
         {
             if (currentItem == null) return;
+            int selectRow = TableList.IndexOf(currentItem);
+
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
             {
                 dataBase.Delete(TableList.GetRange(selectRow, TableList.Count - selectRow));
@@ -154,46 +136,55 @@ namespace ImageDB
 
         private void ImageData_KeyUp(object sender, KeyEventArgs e)
         {
-            string marker = "Tag";
-            if (ImageData.CurrentCell.Column.Header.ToString() != marker) return;
+            string marker = ImageData.CurrentCell.Column.Header.ToString();
+            DataBase ImageBy = new DataBase("ImageLibrary", "ImageBy" + marker);
+            if (!join.Contains(marker)) return;
             switch (e.Key)
             {
                 case Key.Delete:
-                    TableList[selectRow].parameter[marker] = string.Empty;
-                    ImageData.Items.Refresh();
+                    ImageBy.Delete(currentItem.Id);
+                    currentItem.parameter[marker] = string.Empty;
                     break;
                 case Key.Back:
-                    int pos = (TableList[selectRow].parameter[marker] as string).LastIndexOf(";");
-                    if (pos < 0)
-                    {
-                        TableList[selectRow].parameter[marker] = string.Empty;
-                        break;
-                    }
-                    TableList[selectRow].parameter[marker] = (TableList[selectRow].parameter[marker] as string).Remove(pos, (TableList[selectRow].parameter[marker] as string).Length - pos);
-                    ImageData.Items.Refresh();
+                    if (currentItem.parameter[marker].ToString() == string.Empty)
+                        return;
+                    string _marker = currentItem.parameter[marker]
+                                                .ToString()
+                                                .Split(',')
+                                                .Last();
+                    int markerId = GetButtonId(TagsGroup.Children, _marker);
+                    ImageBy.Delete(currentItem.Id, markerId);
+                    
+                    currentItem.parameter = dataBase.LoadById(currentItem.Id, join);
                     break;
                 case Key.C:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        buffer = TableList[selectRow].parameter[marker].ToString();
+                        buffer = currentItem.parameter[marker].ToString();
                     }
                     break;
                 case Key.V:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        TableList[selectRow].parameter[marker] = buffer;
-                        ImageData.Items.Refresh();
+                        currentItem.parameter[marker] = buffer;
                     }
                     break;
                 case Key.X:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        buffer = (TableList[selectRow].parameter[marker] as string);
-                        TableList[selectRow].parameter[marker] = string.Empty;
-                        ImageData.Items.Refresh();
+                        buffer = (currentItem.parameter[marker] as string);
+                        currentItem.parameter[marker] = string.Empty;
                     }
                     break;
             }
+            ImageData.Items.Refresh();
+        }
+        private int GetButtonId(UIElementCollection children, string _marker)
+        {
+            foreach (Button button in TagsGroup.Children)
+                if (button.Content.ToString() == _marker)
+                    return (int)button.Tag;
+            return -1;
         }
     }
 }
