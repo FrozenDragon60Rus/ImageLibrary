@@ -47,7 +47,7 @@ namespace ImageDB.SQL
         }
         public void Clear()
         {
-            string commandText = "DELETE FROM Image";
+            string commandText = $"DELETE FROM {Table}";
             SqlCommand command = new SqlCommand(commandText, connection);
             Send(command);
         }

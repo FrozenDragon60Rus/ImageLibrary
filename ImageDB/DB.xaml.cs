@@ -44,7 +44,7 @@ namespace ImageDB
         }
         private void AddColumn()
         {
-            foreach(string name in TableList.First().parameter.Keys)
+            foreach(string name in dataBase.Columns.Concat(join))
             {
                 var column = new DataGridTextColumn()
                 {
@@ -83,6 +83,7 @@ namespace ImageDB
             {
                 dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address", Table.Image.Empty.parameter);
                 XML.Info.folder = FBD.SelectedPath;
+                dataBase.Load(ref TableList, join);
             }
             ImageData.Items.Refresh();
             Console.WriteLine(ImageData.Items.Count);

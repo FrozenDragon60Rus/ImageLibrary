@@ -70,17 +70,21 @@ namespace ImageDB.SQL
 
             commandText += $"({column}) " +
                            $"VALUES {value}";
-
+            
             SqlCommand command = new SqlCommand(commandText, connection);
 
             foreach (string key in columns)
                 command.Parameters.AddWithValue(key, table.parameter[key]);
+            
             Send(command);
+            
         }
         
         public void Add<T>(List<T> table) where T : Data, new()
         {
             if (table.Count == 0) return;
+            Clear();
+            Console.WriteLine("Очищено");
 
             string commandTextHeader = $"INSERT INTO {Table} ",
                        commandText,
@@ -92,7 +96,7 @@ namespace ImageDB.SQL
             value = Quary.Value(keys);
 
             commandTextHeader += $"({column}) VALUES ";
-
+            
             try
             {
                 connection.Open();
@@ -100,6 +104,7 @@ namespace ImageDB.SQL
                 foreach (T data in table)
                 {
                     commandText = $"({value}) ";
+                    Console.WriteLine(commandTextHeader + commandText);
                     SqlCommand command = new SqlCommand(commandTextHeader + commandText, connection);
 
                     foreach (string key in columns)
@@ -134,7 +139,8 @@ namespace ImageDB.SQL
         #region Load
         public void Load<T>(ref List<T> table) where T : Data, new()
         {
-            
+            table.Clear();
+
             string commandText = "SELECT * " +
                                 $"FROM {Table} ";
 
@@ -157,6 +163,8 @@ namespace ImageDB.SQL
         }
         public void Load<T>(ref List<T> table, string[] join) where T : Data, new()
         {
+            table.Clear();
+
             string commandText = "SELECT ";
             commandText += Quary.Column(columns);
 
@@ -211,8 +219,13 @@ namespace ImageDB.SQL
                    commandText,
                    column,
                    value,
-                   columnWithValue,
-                   columnWithValueWithoutUnique;
+                   columnWithValue;
+
+            if (XML.Info.folder == string.Empty)
+            {
+                MessageBox.Show("База не была сформирована или отсутствуют данные о её формировании");
+                return;
+            }
             string[] file = Directory.GetFiles(XML.Info.folder);
             SqlCommand command;
 
@@ -227,12 +240,9 @@ namespace ImageDB.SQL
                 foreach (T data in table)
                 {
                     columnWithValue = Quary.ColumnWithValue(keys);
-                    columnWithValueWithoutUnique = Quary.ColumnWithValue(keys, new int[] { Array.IndexOf(keys, name) });
 
                     commandText = $"USING (SELECT {columnWithValue}) as new \r\n" +
                                   $"ON {Table}.{name} = new.{name} \r\n" +
-                                   "WHEN MATCHED THEN \r\n" +
-                                  $"UPDATE SET {columnWithValueWithoutUnique} \r\n" +
                                    "WHEN NOT MATCHED THEN \r\n" +
                                   $"INSERT ({column}) \r\n" +
                                   $"VALUES ({value});";
@@ -241,10 +251,11 @@ namespace ImageDB.SQL
                     command = new SqlCommand(commandTextHeader + commandText, connection);
 
                     foreach (string key in columns)
+                    {
                         command.Parameters.AddWithValue("@" + key, data.parameter[key].ToString());
-                    foreach (string key in columns)
                         command.Parameters.AddWithValue("@new" + key, data.parameter[key].ToString());
-
+                    }
+                        
                     command.ExecuteNonQuery();
                 }
             }
@@ -263,10 +274,11 @@ namespace ImageDB.SQL
         {
             string[] file = Directory.GetFiles(folder);
             T data;
+            table.Clear();
             foreach (var item in file)
             {
                 data = new T();
-                data.parameter = parameter;
+                data.parameter = new Dictionary<string, object> (parameter);
                 data.parameter[name] = item;
                 table.Add(data);
             }

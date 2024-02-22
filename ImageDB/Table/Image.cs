@@ -15,11 +15,10 @@ namespace ImageDB.Table
         public string Author { get => parameter[nameof(Author)].ToString(); }
         public byte Rating { get => System.Convert.ToByte(parameter[nameof(Rating)]); }
 
-        public Image(int Id, string Address, string Tag, byte Rating) : base() =>
+        public Image(int Id, string Address, byte Rating) : base() =>
             parameter = new Dictionary<string, object>() {
                 { nameof(Id), Id },
                 { nameof(Address), Address },
-                { nameof(Tag), Tag },
                 { nameof(Rating), Rating }
             };
         public Image(Dictionary<string, object> parameter) : base(parameter) =>
@@ -28,13 +27,15 @@ namespace ImageDB.Table
             parameter = new Dictionary<string, object>() {
                 { "Id", -1 },
                 { "Address", Address },
+                { "Rating", 0 },
                 { "Tag", string.Empty },
-                { "Rating", 0 }
+                { "Character", string.Empty },
+                { "Author", string.Empty }
             };
         public Image() =>
             parameter = Empty.parameter;
 
         public static Image Empty =>
-            new Image(-1, string.Empty, string.Empty, 0);
+            new Image(string.Empty);
     }
 }

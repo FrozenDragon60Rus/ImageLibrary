@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace ImageDB.XML
@@ -17,11 +19,7 @@ namespace ImageDB.XML
                     d.Save(name);
                     return;
                 }
-                XDocument d2 = new XDocument(
-                    new XElement("BaseInfo",
-                        new XElement("DBName", value))
-                );
-                d2.Save(name);
+                WriteFolder();
             }
             get
             {
@@ -44,11 +42,7 @@ namespace ImageDB.XML
                     d.Save(name);
                     return;
                 }
-                XDocument d2 = new XDocument(
-                    new XElement("BaseInfo",
-                        new XElement("Folder", value))
-                );
-                d2.Save(name);
+                WriteFolder();
             }
             get
             {
@@ -62,12 +56,14 @@ namespace ImageDB.XML
 
         }
 
-        static public void writeFolder(string folder)
+        static public void WriteFolder()
         {
-            XDocument d = XDocument.Load(name);
-            XElement baseInfo = d.Element("BaseInfo");
-            baseInfo.Add(new XElement("folder", folder));
-            d.Save(name);
+                XDocument d = new XDocument();//XDocument.Load(name);
+                XElement baseInfo = new XElement("BaseInfo"); //d.Element();
+                baseInfo.Add(new XElement("Folder"));
+                baseInfo.Add(new XElement("DBName"));
+                d.Add(baseInfo);
+                d.Save(name);
         }
     }
 }
