@@ -108,7 +108,11 @@ namespace ImageDB
         {
             if (currentItem == null) return;
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
+            {
+                dataBase.Delete(TableList.GetRange(selectRow, TableList.Count - selectRow));
                 TableList.RemoveRange(selectRow, TableList.Count - selectRow);
+            }
+            
             ImageData.Items.Refresh();
             selectRow = -1;
         }
@@ -136,8 +140,8 @@ namespace ImageDB
 
         private void ImageData_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            selectRow = TableList.IndexOf(ImageData.CurrentCell.Item as Table.Image);
-            if (selectRow > -1) currentItem = TableList[selectRow];
+            if (ImageData.CurrentCell.IsValid)
+                currentItem = ImageData.CurrentCell.Item as Table.Image;
         }
 
         

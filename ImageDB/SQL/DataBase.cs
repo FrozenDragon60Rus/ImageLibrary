@@ -286,24 +286,34 @@ namespace ImageDB.SQL
         }
         public void Delete(int imageId, int markerId)
         {
-            connection.Open();
             string commandText = "DELETE \r\n" +
                                 $"FROM {Table} \r\n" +
                                 $"WHERE Tag_Id = {markerId})\r\n" +
                                 $"AND Image_Id = {imageId}";
 
             SqlCommand command = new SqlCommand(commandText, connection);
-            connection.Close();
+            Send(command);
         }
         public void Delete(Data data)
         {
-            connection.Open();
             string commandText = "DELETE \r\n" +
                                 $"FROM {Table} \r\n" +
                                 $"WHERE Id = {data.parameter["Id"]})\r\n";
 
             SqlCommand command = new SqlCommand(commandText, connection);
-            connection.Close();
+            Send(command);
+        }
+        public void Delete<T>(List<T> data) where T : Data
+        {
+            foreach (var _data in data)
+            {
+                string commandText = "DELETE \r\n" +
+                                    $"FROM {Table} \r\n" +
+                                    $"WHERE Id = {_data.parameter["Id"]})\r\n";
+
+                SqlCommand command = new SqlCommand(commandText, connection);
+                Send(command);
+            }
         }
     }
 }
