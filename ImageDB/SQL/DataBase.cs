@@ -59,6 +59,7 @@ namespace ImageDB.SQL
                                   : key.ToArray();
         }
 
+        #region Add
         public void Add<T>(T table) where T : Data, new()
         {
             string commandText = $"INSERT INTO {Table} ";
@@ -129,15 +130,18 @@ namespace ImageDB.SQL
             SqlCommand command = new SqlCommand(commandText, connection);
             Send(command);
         }
+        #endregion
 
+        #region Load
         public void Load<T>(ref List<T> table) where T : Data, new()
         {
-            connection.Open();
+            
             string commandText = "SELECT * " +
                                 $"FROM {Table} ";
 
             SqlCommand command = new SqlCommand(commandText, connection);
             T data;
+            connection.Open();
             using (SqlDataReader dataReader = command.ExecuteReader())
             {
                 while (dataReader.Read())
@@ -163,9 +167,9 @@ namespace ImageDB.SQL
 
             commandText += Quary.JoinTable(Table, join);
 
-            connection.Open();
             SqlCommand command = new SqlCommand(commandText, connection);
             T data;
+            connection.Open();
             using (SqlDataReader dataReader = command.ExecuteReader())
                 while (dataReader.Read())
                 {
@@ -200,6 +204,7 @@ namespace ImageDB.SQL
             connection.Close();
             return parameter;
         }
+        #endregion
 
         public void Refresh<T>(ref List<T> table, string name) where T : Data
         {

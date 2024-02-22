@@ -11,9 +11,8 @@ namespace ImageDB.SQL
     public abstract class Base
     {
         protected readonly string Name,
-                        Server = @"FROZENDRAGON\SQLSERV",
-                        Table,
-                        Primary;
+                                  Server = @"FROZENDRAGON\SQLSERV",
+                                  Table;
         protected string[] columns;
         protected readonly SqlConnection connection;
         public ConnectionState State { get => connection.State; }
