@@ -401,7 +401,7 @@ FodyWeavers.xsd
 ImageDB/DBControl (2).cs
 ImageDB/Image.db
 ImageDB/reserv.txt
-ImageDB/Binary
+ImageDB\Binary
 ImageLibrary/Binary/DataBase.cs
 ImageLibrary/Корзина.txt
 *.txt
