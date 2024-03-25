@@ -396,6 +396,8 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# MyFolder
 ImageDB/DBControl (2).cs
 ImageDB/Image.db
 ImageDB/reserv.txt
