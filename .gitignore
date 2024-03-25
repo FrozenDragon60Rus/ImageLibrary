@@ -398,10 +398,10 @@ FodyWeavers.xsd
 *.sln.iml
 
 # MyFolder
-ImageDB/DBControl (2).cs
-ImageDB/Image.db
-ImageDB/reserv.txt
-ImageDB/Binary/
-ImageLibrary/Binary/
-ImageLibrary/Корзина.txt
+/ImageDB/DBControl (2).cs
+/ImageDB/Image.db
+/ImageDB/reserv.txt
+/ImageDB/Binary/
+/ImageLibrary/Binary/
+/ImageLibrary/Корзина.txt
 Мусорка.txt
