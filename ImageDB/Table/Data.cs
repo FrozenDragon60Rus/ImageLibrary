@@ -22,7 +22,7 @@ namespace ImageDB.Table
             parameter.Keys.ToArray();
         public string[] ParameterName()
         {
-            string[] key = parameter.Keys.ToArray();
+            string[] key = [..parameter.Keys];
             for (int i = 0; i < key.Length; i++)
                 key[i] = "@" + key[i];
             return key;
@@ -32,7 +32,7 @@ namespace ImageDB.Table
             this.parameter = parameter;
         public Data()
         {
-            parameter = new Dictionary<string, object>();
+            parameter = [];
         }
     }
 }

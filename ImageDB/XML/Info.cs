@@ -1,53 +1,51 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Xml.Linq;
 
 namespace ImageDB.XML
 {
     internal class Info
     {
-        static private string name = "info.xml";
-        static public string db
+        static private string Name { get; } = "info.xml";
+        static public string DB
         {
             set
             {
-                if (File.Exists(name))
+                if (File.Exists(Name))
                 {
-                    XDocument d = XDocument.Load(name);
+                    var d = XDocument.Load(Name);
                     d.Element("BaseInfo").Element("DBName").Value = value;
-                    d.Save(name);
+                    d.Save(Name);
                     return;
                 }
                 WriteFolder();
             }
             get
             {
-                if (File.Exists(name))
-                    return XDocument.Load(name)
+                if (File.Exists(Name))
+                    return XDocument.Load(Name)
                                     .Element("BaseInfo")
                                     .Element("DBName")
                                     .Value;
                 return Path.GetFullPath(@"%LOCALAPPDATA%\MyImageLibrary\DB\image.db");
             }
         }
-        static public string folder
+        static public string Folder
         {
             set
             {
-                if (File.Exists(name))
+                if (File.Exists(Name))
                 {
-                    XDocument d = XDocument.Load(name);
+                    var d = XDocument.Load(Name);
                     d.Element("BaseInfo").Element("Folder").Value = value;
-                    d.Save(name);
+                    d.Save(Name);
                     return;
                 }
                 WriteFolder();
             }
             get
             {
-                if (File.Exists(name))
-                    return XDocument.Load(name)
+                if (File.Exists(Name))
+                    return XDocument.Load(Name)
                                     .Element("BaseInfo")
                                     .Element("Folder")
                                     .Value;
@@ -58,12 +56,12 @@ namespace ImageDB.XML
 
         static public void WriteFolder()
         {
-                XDocument d = new XDocument();//XDocument.Load(name);
-                XElement baseInfo = new XElement("BaseInfo"); //d.Element();
+                var d = new XDocument();//XDocument.Load(name);
+                var baseInfo = new XElement("BaseInfo"); //d.Element();
                 baseInfo.Add(new XElement("Folder"));
                 baseInfo.Add(new XElement("DBName"));
                 d.Add(baseInfo);
-                d.Save(name);
+                d.Save(Name);
         }
     }
 }

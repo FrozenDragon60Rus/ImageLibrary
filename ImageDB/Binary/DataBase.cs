@@ -10,13 +10,13 @@ namespace ImageDB.Binary
 {
     static class DataBase
     {
-        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+        /*[System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
         static extern int MessageBoxTimeout(IntPtr hwnd, String text, String title,
-                                     uint type, Int16 wLanguageId, Int32 milliseconds);
+                                     uint type, Int16 wLanguageId, Int32 milliseconds);*/
 
         static public void Load(ref List<DBTable> table)
         {
-            BinaryReader r = new BinaryReader(new FileStream(@"DB\f.db", FileMode.Open, FileAccess.Read));
+            var r = new BinaryReader(new FileStream(@"DB\f.db", FileMode.Open, FileAccess.Read));
             for (int i = table.Count - 1; i >= 0; i--)
                 table.RemoveAt(i);
             uint id = 0;
@@ -25,10 +25,12 @@ namespace ImageDB.Binary
             r.ReadString();
             while (r.BaseStream.Position < r.BaseStream.Length)
             {
-                column = new DBTable(r.ReadString());
-                column.ID = id++;
-                column.Tag = r.ReadString();
-                column.Raiting = r.ReadByte();
+                column = new(r.ReadString())
+                {
+                    ID = id++,
+                    Tag = r.ReadString(),
+                    Raiting = r.ReadByte()
+                };
                 //Console.WriteLine(column.ID + ") " + column.Name + " \"" + column.Tag + " \"");
                 table.Add(column);
             }
@@ -37,7 +39,7 @@ namespace ImageDB.Binary
         }
         static public void Load(ref List<DBTable> table, string fileName)
         {
-            BinaryReader r = new BinaryReader(new FileStream(fileName, FileMode.Open, FileAccess.Read));
+            var r = new BinaryReader(new FileStream(fileName, FileMode.Open, FileAccess.Read));
             for (int i = table.Count - 1; i >= 0; i--)
                 table.RemoveAt(i);
             uint id = 0;
@@ -47,10 +49,12 @@ namespace ImageDB.Binary
 
             while (r.BaseStream.Position < r.BaseStream.Length)
             {
-                column = new DBTable(r.ReadString());
-                column.ID = id++;
-                column.Tag = r.ReadString();
-                column.Raiting = r.ReadByte();
+                column = new DBTable(r.ReadString())
+                {
+                    ID = id++,
+                    Tag = r.ReadString(),
+                    Raiting = r.ReadByte()
+                };
                 //Console.WriteLine(column.ID + ") " + column.Name + " \"" + column.Tag + " \"");
                 table.Add(column);
             }
@@ -62,9 +66,9 @@ namespace ImageDB.Binary
             string directory = Path.GetFullPath(
                 Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\MyImageLibrary\DB\image.db"));
             if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
-            XML.Info.db = Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\MyImageLibrary\DB\image.db");
+            XML.Info.DB = Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\MyImageLibrary\DB\image.db");
             //Console.WriteLine(directory);
-            BinaryWriter w = new BinaryWriter(File.Create(XML.Info.db));
+            var w = new BinaryWriter(File.Create(XML.Info.DB));
 
             w.Write(files.Length);
             w.Write(Path.GetFullPath(folderName));
@@ -76,11 +80,11 @@ namespace ImageDB.Binary
             }
             
             w.Close();
-            Load(ref table, XML.Info.db);
+            Load(ref table, XML.Info.DB);
         }
         static public void TestLoad(ref List<DBTable> table, string str)
         {
-            StreamReader SR = new StreamReader(str);
+            var SR = new StreamReader(str);
             
             string[] s = SR.ReadLine().Split(',');
             string name = s[0], tag = s[1];
@@ -100,13 +104,13 @@ namespace ImageDB.Binary
             string ImageDirectory,
                    ImageDB = Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\MyImageLibrary\DB\image.db"),
                    Temp = "DB\\temporary.db";
-            using(BinaryReader r = new BinaryReader(File.OpenRead(XML.Info.db)))
+            using(var r = new BinaryReader(File.OpenRead(XML.Info.DB)))
                 {
                     r.BaseStream.Position += 4;
                     ImageDirectory = r.ReadString();
                     r.Close();
                 }
-            BinaryWriter w = new BinaryWriter(File.Create(Temp));
+            var w = new BinaryWriter(File.Create(Temp));
 
             w.Write(table.Count);
             w.Write(ImageDirectory);
@@ -122,18 +126,18 @@ namespace ImageDB.Binary
             File.Delete(Temp);
 
             //MessageBox.Show("База обновлена");
-            MessageBoxTimeout(IntPtr.Zero, "База обновлена", "БД", 0, 0, 500);
+            //MessageBoxTimeout(IntPtr.Zero, "База обновлена", "БД", 0, 0, 500);
 
-            XML.Info.db = ImageDB;
+            XML.Info.DB = ImageDB;
         }
 
         static public void Refresh(ref List<DBTable> table)
         {
             string ImageDirectory;
 
-            if (File.Exists(XML.Info.db))
+            if (File.Exists(XML.Info.DB))
             {
-                using (BinaryReader r = new BinaryReader(File.OpenRead(XML.Info.db)))
+                using (var r = new BinaryReader(File.OpenRead(XML.Info.DB)))
                 {
                     r.BaseStream.Position += 4;
                     ImageDirectory = r.ReadString();
@@ -154,19 +158,19 @@ namespace ImageDB.Binary
                         table.Add(img);
                     }
                 }
-                table = table.OrderBy(row => row.Name).ToList();
+                table = [..table.OrderBy(row => row.Name)];
                 Save(table);
             }
         }
         static private bool CheckExtension(string extension)
         {
-            switch (extension)
+            return extension switch
             {
-                case "jpg": return true;
-                case "png": return true;
-                case "bmp": return true;
-                default: return false;
-            }
+                "jpg" => true,
+                "png" => true,
+                "bmp" => true,
+                _ => false,
+            };
         }
         static public void FindEmpty(List<DBTable> table)
         {
@@ -186,7 +190,7 @@ namespace ImageDB.Binary
             string folder = "";
             string[] files;
             files = Directory.GetFiles(folder, null, SearchOption.AllDirectories);
-            List<DBTable> table = new List<DBTable>();
+            List<DBTable> table = [];
             foreach (string f in files)
                 table.Add(new DBTable(f));
             return table;

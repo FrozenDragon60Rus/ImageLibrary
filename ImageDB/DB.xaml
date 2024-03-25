@@ -17,7 +17,6 @@
         <Button Content="Сформировать" HorizontalAlignment="Left" Margin="10,366,0,0" Width="158" Click="Button_Click" Height="35" VerticalAlignment="Top"/>
         <Button Content="Обновить" HorizontalAlignment="Left" Margin="173,366,0,0" VerticalAlignment="Top" Width="158" Height="35" Click="Button_Refresh"/>
         <Button Content="Удалить" HorizontalAlignment="Left" Margin="336,366,0,0" VerticalAlignment="Top" Width="158" Height="35" Click="Button_Delete" KeyDown="Button_Delete_KeyDown"/>
-        <Button Content="Список" HorizontalAlignment="Left" Margin="704,366,0,0" VerticalAlignment="Top" Width="78" Height="35" Click="Button_Document_List"/>
 
     </Grid>
 </Window>

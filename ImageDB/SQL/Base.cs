@@ -15,15 +15,15 @@ namespace ImageDB.SQL
                                   Server = @"FROZENDRAGON\SQLSERV",
                                   Table;
         protected string[] columns;
-        protected readonly SqlConnection connection;
-        public ConnectionState State { get => connection.State; }
+        protected SqlConnection Connection { get; }
+        public ConnectionState State { get => Connection.State; }
         public string[] Columns { get => columns; }
 
         public Base(string name, string table)
         {
             Name = name;
             Table = table;
-            connection = Connect();
+            Connection = Connect();
             columns = ColumnName();
         }
 
@@ -40,30 +40,30 @@ namespace ImageDB.SQL
         {
             try
             {
-                connection.Open();
+                Connection.Open();
                 command.ExecuteNonQuery();
             }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
-            finally { connection.Close(); }
+            finally { Connection.Close(); }
         }
         public void Clear()
         {
             string commandText = $"DELETE FROM {Table}";
-            SqlCommand command = new(commandText, connection);
+            SqlCommand command = new(commandText, Connection);
             Send(command);
         }
         protected string[] ColumnName()
         {
             List<string> column = [];
             string commandText = $@"SELECT name FROM sys.dm_exec_describe_first_result_set('SELECT * FROM {Table}', NULL, 0) ;";
-            SqlCommand command = new(commandText, connection);
-            connection.Open();
+            SqlCommand command = new(commandText, Connection);
+            Connection.Open();
 
             using (SqlDataReader dataReader = command.ExecuteReader())
                 while (dataReader.Read())
                     column.Add(dataReader["name"].ToString());
 
-            connection.Close();
+            Connection.Close();
             return [..column];
         }
     }

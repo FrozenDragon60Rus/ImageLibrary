@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,9 +16,9 @@ namespace ImageDB
     [SupportedOSPlatform("Windows")]
     public partial class DB : Window
     {
-        public List<Table.Image> TableList = [];
-        public Table.Image currentItem = null;
-        public readonly DataBase dataBase = new("ImageLibrary", "Image");
+        private List<Table.Image> TableList = [];
+        private Table.Image CurrentItem { set; get; } = null;
+        public DataBase dataBase = new("ImageLibrary", "Image");
         public readonly string[] join = ["Tag", "Character", "Author"];
         private string buffer = string.Empty;
 
@@ -29,7 +28,7 @@ namespace ImageDB
 
             DataInit();
 
-            new TagButton(this, "Tag").Fill();
+            FillTagButton();
         }
 
         private void DataInit()
@@ -38,7 +37,7 @@ namespace ImageDB
             dataBase.Load(ref TableList, join);
             AddColumn();
             if (TableList.Count > 0)
-                currentItem = TableList.First();
+                CurrentItem = TableList.First();
             ImageData.Items.Refresh();
         }
         private void AddColumn()
@@ -56,6 +55,16 @@ namespace ImageDB
                 ImageData.Columns.Add(column);
             }
         }
+        private void FillTagButton()
+        {
+            DataBase tag = new("ImageLibrary", join.First());
+            List<Table.Marker> marker = [];
+
+            tag.Load(ref marker);
+
+            foreach (Table.Marker Tag in marker)
+                TagsGroup.Children.Add(new MarkerButton(Tag.Name, Tag.Id, join.First(), AddEvent, RemoveEvent));
+        }
 
         #region button_event
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -66,7 +75,7 @@ namespace ImageDB
             if (FBD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address", Table.Image.Empty.parameter);
-                XML.Info.folder = FBD.SelectedPath;
+                XML.Info.Folder = FBD.SelectedPath;
                 dataBase.Load(ref TableList, join);
             }
             ImageData.Items.Refresh();
@@ -81,15 +90,15 @@ namespace ImageDB
         }
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (currentItem == null) return;
-            TableList.Remove(currentItem);
-            dataBase.Delete(currentItem);
+            if (CurrentItem == null) return;
+            TableList.Remove(CurrentItem);
+            dataBase.Delete(CurrentItem);
             ImageData.Items.Refresh();
         }
         private void Button_Delete_KeyDown(object sender, KeyEventArgs e)
         {
-            if (currentItem == null) return;
-            int selectRow = TableList.IndexOf(currentItem);
+            if (CurrentItem == null) return;
+            int selectRow = TableList.IndexOf(CurrentItem);
 
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
             {
@@ -99,13 +108,33 @@ namespace ImageDB
             
             ImageData.Items.Refresh();
         }
+        public void AddEvent(object sender, EventArgs e)
+        {
+            var button = sender as MarkerButton;
+            DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
+
+            marker.Add(CurrentItem.Id, button.Id, button.Marker);
+            CurrentItem.parameter = dataBase.LoadById(CurrentItem.Id, join);
+
+            ImageData.Items.Refresh();
+        }
+        public void RemoveEvent(object sender, EventArgs e)
+        {
+            var button = sender as MarkerButton;
+
+            DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
+
+            marker.Delete(CurrentItem.Id, button.Id);
+
+            ImageData.Items.Refresh();
+        }
         #endregion
 
         public IEnumerable<DataGridRow> GetDataGridRows(DataGrid grid)
         {
             var itemsSource = grid.ItemsSource;
 
-            if (itemsSource is null) 
+            if (itemsSource is null)  
                 yield return null;
 
             foreach (var item in itemsSource)
@@ -121,7 +150,7 @@ namespace ImageDB
         private void ImageData_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (ImageData.CurrentCell.IsValid)
-                currentItem = ImageData.CurrentCell.Item as Table.Image;
+                CurrentItem = ImageData.CurrentCell.Item as Table.Image;
         }
 
         
@@ -129,57 +158,58 @@ namespace ImageDB
         private void ImageData_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
             if(ImageData.CurrentCell.IsValid)
-                currentItem = ImageData.CurrentCell.Item as Table.Image;
+                CurrentItem = ImageData.CurrentCell.Item as Table.Image;
         }
 
         private void ImageData_KeyUp(object sender, KeyEventArgs e)
         {
             string marker = ImageData.CurrentCell.Column.Header.ToString();
-            DataBase ImageBy = new("ImageLibrary", "ImageBy" + marker);
+            var ImageBy = new DataBase("ImageLibrary", "ImageBy" + marker);
             if (!join.Contains(marker)) return;
             switch (e.Key)
             {
                 case Key.Delete:
-                    ImageBy.Delete(currentItem.Id);
-                    currentItem.parameter[marker] = string.Empty;
+                    ImageBy.Delete(CurrentItem.Id);
+                    CurrentItem.parameter[marker] = string.Empty;
                     break;
                 case Key.Back:
-                    if (currentItem.parameter[marker].ToString() == string.Empty)
+                    if (CurrentItem.parameter[marker]
+                                   .ToString() == string.Empty)
                         return;
-                    string _marker = currentItem.parameter[marker]
+                    string name = CurrentItem.parameter[marker]
                                                 .ToString()
                                                 .Split(',')
                                                 .Last();
-                    int markerId = GetButtonId(TagsGroup.Children, _marker);
-                    ImageBy.Delete(currentItem.Id, markerId);
-                    
-                    currentItem.parameter = dataBase.LoadById(currentItem.Id, join);
+                    int markerId = GetButtonId(name);
+                    ImageBy.Delete(CurrentItem.Id, markerId);
+
+                    CurrentItem.parameter = dataBase.LoadById(CurrentItem.Id, join);
                     break;
                 case Key.C:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-                        buffer = currentItem.parameter[marker].ToString();
+                        buffer = CurrentItem.parameter[marker].ToString();
                     break;
                 case Key.V:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        currentItem.parameter[marker] = buffer;
-                        ImageBy
+                        CurrentItem.parameter[marker] = buffer;
+
                     }
                     break;
                 case Key.X:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        buffer = (currentItem.parameter[marker] as string);
-                        currentItem.parameter[marker] = string.Empty;
+                        buffer = (CurrentItem.parameter[marker] as string);
+                        CurrentItem.parameter[marker] = string.Empty;
                     }
                     break;
             }
             ImageData.Items.Refresh();
         }
-        private int GetButtonId(UIElementCollection children, string _marker)
+        private int GetButtonId(string name)
         {
             foreach (Button button in TagsGroup.Children)
-                if (button.Content.ToString() == _marker)
+                if (button.Content.ToString() == name)
                     return (int)button.Tag;
             return -1;
         }
