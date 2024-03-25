@@ -15,13 +15,15 @@ using System.ComponentModel.Design;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Windows.Controls.Primitives;
 using System.Diagnostics;
+using System.Runtime.Versioning;
 
 namespace ImageDB.SQL
 {
+    [SupportedOSPlatform("Windows")]
     public class DataBase : Base
     {
         readonly string Primary;
-        string[] Unique;
+        readonly string[] Unique;
         
 
         public DataBase(string name, string table) : base(name, table)
@@ -32,7 +34,7 @@ namespace ImageDB.SQL
 
         public string[] GetByKeyName(string keyName)
         {
-            List<string> key = new List<string>();
+            List<string> key = [];
             try
             {
                 connection.Open();
@@ -45,8 +47,8 @@ namespace ImageDB.SQL
                                        $"AND Tab.Constraint_Type = '{keyName}' \r\n" +
                                        $"AND Col.Table_Name = '{Table}'\r\n";
 
-                SqlCommand command = new SqlCommand(coomandText, connection);
-                using (SqlDataReader dataReader = command.ExecuteReader())
+                SqlCommand command = new(coomandText, connection);
+                using var dataReader = command.ExecuteReader();
                     while (dataReader.Read())
                         key.Add(dataReader[0].ToString());
             }
@@ -55,8 +57,8 @@ namespace ImageDB.SQL
                 MessageBox.Show(ex.Message);
             }
             finally { connection.Close(); }
-            return key.Count == 0 ? new string[] { string.Empty }
-                                  : key.ToArray();
+            return key.Count == 0 ? [ string.Empty ]
+                                  : [.. key];
         }
 
         #region Add
@@ -71,7 +73,7 @@ namespace ImageDB.SQL
             commandText += $"({column}) " +
                            $"VALUES {value}";
             
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
 
             foreach (string key in columns)
                 command.Parameters.AddWithValue(key, table.parameter[key]);
@@ -105,7 +107,7 @@ namespace ImageDB.SQL
                 {
                     commandText = $"({value}) ";
                     Console.WriteLine(commandTextHeader + commandText);
-                    SqlCommand command = new SqlCommand(commandTextHeader + commandText, connection);
+                    SqlCommand command = new(commandTextHeader + commandText, connection);
 
                     foreach (string key in columns)
                         command.Parameters.AddWithValue("@" + key, data.parameter[key].ToString());
@@ -131,7 +133,7 @@ namespace ImageDB.SQL
                                   "INSERT \r\n" +
                                  $"VALUES ({imageId}, {markerId});";
 
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             Send(command);
         }
         #endregion
@@ -144,15 +146,17 @@ namespace ImageDB.SQL
             string commandText = "SELECT * " +
                                 $"FROM {Table} ";
 
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             T data;
             connection.Open();
             using (SqlDataReader dataReader = command.ExecuteReader())
             {
                 while (dataReader.Read())
                 {
-                    data = new T();
-                    data.parameter = new Dictionary<string, object>();
+                    data = new()
+                    {
+                        parameter = []
+                    };
                     foreach (string key in columns)
                         data.parameter.Add(key, dataReader[key]);
                     table.Add(data);
@@ -174,14 +178,16 @@ namespace ImageDB.SQL
 
             commandText += Quary.JoinTable(Table, join);
 
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             T data;
             connection.Open();
             using (SqlDataReader dataReader = command.ExecuteReader())
                 while (dataReader.Read())
                 {
-                    data = new T();
-                    data.parameter = new Dictionary<string, object>();
+                    data = new()
+                    {
+                        parameter = []
+                    };
                     foreach (string key in columns.Concat(join))
                         data.parameter.Add(key, dataReader[key]);
                     table.Add(data);
@@ -190,7 +196,7 @@ namespace ImageDB.SQL
         }
         public Dictionary<string, object> LoadById(int Id, string[] join)
         {
-            Dictionary<string, object> parameter = new Dictionary<string, object>();
+            Dictionary<string, object> parameter = [];
             string commandText = "SELECT ";
             commandText += Quary.Column(columns);
 
@@ -202,7 +208,7 @@ namespace ImageDB.SQL
             commandText += $"\r\nWHERE Id = {Id}";
 
             connection.Open();
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             using (SqlDataReader dataReader = command.ExecuteReader())
                 if (dataReader.Read())
                     foreach (string key in columns.Concat(join))
@@ -277,8 +283,10 @@ namespace ImageDB.SQL
             table.Clear();
             foreach (var item in file)
             {
-                data = new T();
-                data.parameter = new Dictionary<string, object> (parameter);
+                data = new()
+                {
+                    parameter = new(parameter)
+                };
                 data.parameter[name] = item;
                 table.Add(data);
             }
@@ -291,7 +299,7 @@ namespace ImageDB.SQL
                                 $"FROM {Table} \r\n" +
                                 $"WHERE Image_Id = {imageId}";
 
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             Send(command);
         }
         public void Delete(int imageId, int markerId)
@@ -301,7 +309,7 @@ namespace ImageDB.SQL
                                 $"WHERE Tag_Id = {markerId}\r\n" +
                                 $"AND Image_Id = {imageId}";
 
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             Send(command);
         }
         
@@ -311,7 +319,7 @@ namespace ImageDB.SQL
                                 $"FROM {Table} \r\n" +
                                 $"WHERE Id = {data.parameter["Id"]})\r\n";
 
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             Send(command);
         }
         public void Delete<T>(List<T> data) where T : Data
@@ -322,7 +330,7 @@ namespace ImageDB.SQL
                                     $"FROM {Table} \r\n" +
                                     $"WHERE Id = {_data.parameter["Id"]})\r\n";
 
-                SqlCommand command = new SqlCommand(commandText, connection);
+                SqlCommand command = new(commandText, connection);
                 Send(command);
             }
         }

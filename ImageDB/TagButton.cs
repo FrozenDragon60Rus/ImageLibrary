@@ -8,33 +8,29 @@ using System.Windows.Media;
 using System.Windows;
 using ImageDB.SQL;
 using System.Xml.Linq;
+using System.Runtime.Versioning;
 
 namespace ImageDB
 {
-    internal class TagButton
+    [SupportedOSPlatform("Windows")]
+    internal class TagButton (DB Form, string Name)
     {
-        string Name;
-        DB form;
-
-        public TagButton(DB form, string Name)
-        {
-            this.form = form;
-            this.Name = Name;
-        }
+        string Name { get; } = Name;
+        private DB Form { get; } = Form;
 
         public void Fill()
         {
-            DataBase tag = new DataBase("ImageLibrary", Name);
-            List<Table.Marker> marker = new List<Table.Marker>();
+            DataBase tag = new("ImageLibrary", Name);
+            List<Table.Marker> marker = [];
 
             tag.Load(ref marker);
 
             foreach (Table.Marker Tag in marker)
-                form.TagsGroup.Children.Add(Create(Tag.Name, Tag.Id));
+                Form.TagsGroup.Children.Add(Create(Tag.Name, Tag.Id));
         }
         public Button Create(string name, int num)
         {
-            Button b = new Button()
+            Button b = new()
             {
                 Name = name + "_button",
                 Content = name,
@@ -46,10 +42,10 @@ namespace ImageDB
                 Height = 30,
                 Tag = num
             };
-            b.Margin = new Thickness(5,
-                                     (5 + b.Height) * (num - 1),
-                                     0,
-                                     0);
+            b.Margin = new(5,
+                          (5 + b.Height) * (num - 1),
+                           0,
+                           0);
             b.Click += AddTagEvent;
             b.MouseRightButtonUp += RemoveTagEvent;
 
@@ -59,22 +55,22 @@ namespace ImageDB
         public void AddTagEvent(object sender, EventArgs e)
         {
             Button TagButton = sender as Button;
-            DataBase marker = new DataBase("ImageLibrary", "ImageBy" + Name);
+            DataBase marker = new("ImageLibrary", "ImageBy" + Name);
 
-            marker.Add((int)form.currentItem.parameter["Id"], (int)TagButton.Tag, Name);
-            form.currentItem.parameter = form.dataBase
-                                             .LoadById((int)form.currentItem.parameter["Id"], form.join);
+            marker.Add(Form.currentItem.Id, (int)TagButton.Tag, Name);
+            Form.currentItem.parameter = Form.dataBase
+                                             .LoadById(Form.currentItem.Id, Form.join);
 
-            form.ImageData.Items.Refresh();
+            Form.ImageData.Items.Refresh();
         }
         public void RemoveTagEvent(object sender, EventArgs e)
         {
             Button TagButton = sender as Button;
-            DataBase marker = new DataBase("ImageLibrary", "ImageBy" + Name);
+            DataBase marker = new("ImageLibrary", "ImageBy" + Name);
 
-            marker.Delete((int)form.currentItem.parameter["Id"], (int)TagButton.Tag);
+            marker.Delete(Form.currentItem.Id, (int)TagButton.Tag);
 
-            form.ImageData.Items.Refresh();
+            Form.ImageData.Items.Refresh();
         }
     }
 }

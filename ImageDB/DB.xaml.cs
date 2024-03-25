@@ -5,33 +5,34 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using ImageDB.SQL;
-using System.Runtime.Remoting.Messaging;
 using System.Windows.Data;
+using System.Runtime.Versioning;
 
 namespace ImageDB
 {
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
+    [SupportedOSPlatform("Windows")]
     public partial class DB : Window
     {
-        public static List<Table.Image> TableList = new List<Table.Image>();
+        public List<Table.Image> TableList = [];
         public Table.Image currentItem = null;
-        public readonly DataBase dataBase = new DataBase("ImageLibrary", "Image");
-        public readonly string[] join = new string[] { "Tag", "Character", "Author" };
-        string buffer = string.Empty;
+        public readonly DataBase dataBase = new("ImageLibrary", "Image");
+        public readonly string[] join = ["Tag", "Character", "Author"];
+        private string buffer = string.Empty;
+
         public DB()
         {
             InitializeComponent();
 
-            Init();
-            //Array.Sort(SeatchPatterns.Tag, StringComparer.InvariantCulture);
+            DataInit();
+
             new TagButton(this, "Tag").Fill();
         }
 
-        public void Init()
+        private void DataInit()
         {            
             ImageData.ItemsSource = TableList;
             dataBase.Load(ref TableList, join);
@@ -50,6 +51,7 @@ namespace ImageDB
                     Binding = new Binding(name),
                     IsReadOnly = true
                 };
+                if (join.Contains(column.Header)) column.MaxWidth = 150;
 
                 ImageData.Columns.Add(column);
             }
@@ -60,7 +62,7 @@ namespace ImageDB
         {
             if (dataBase.State == System.Data.ConnectionState.Open) return;
 
-            System.Windows.Forms.FolderBrowserDialog FBD = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.FolderBrowserDialog FBD = new();
             if (FBD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address", Table.Image.Empty.parameter);
@@ -96,23 +98,19 @@ namespace ImageDB
             }
             
             ImageData.Items.Refresh();
-            selectRow = -1;
-        }
-        private void Button_Document_List(object sender, RoutedEventArgs e)
-        {
-            //DBControl.FormDocumentList();
         }
         #endregion
 
-            public IEnumerable<DataGridRow> GetDataGridRows(DataGrid grid)
+        public IEnumerable<DataGridRow> GetDataGridRows(DataGrid grid)
         {
-            IEnumerable itemsSource = grid.ItemsSource as IEnumerable;
-            if (null == itemsSource) yield return null;
-            foreach (IEnumerable item in itemsSource)
-            {
-                DataGridRow row = grid.ItemContainerGenerator.ContainerFromItem(item) as DataGridRow;
-                if (null != row) yield return row;
-            }
+            var itemsSource = grid.ItemsSource;
+
+            if (itemsSource is null) 
+                yield return null;
+
+            foreach (var item in itemsSource)
+                if (grid.ItemContainerGenerator.ContainerFromItem(item) is DataGridRow row) 
+                    yield return row;
         }
 
         private void ImageData_MouseDown(object sender, MouseButtonEventArgs e)
@@ -137,7 +135,7 @@ namespace ImageDB
         private void ImageData_KeyUp(object sender, KeyEventArgs e)
         {
             string marker = ImageData.CurrentCell.Column.Header.ToString();
-            DataBase ImageBy = new DataBase("ImageLibrary", "ImageBy" + marker);
+            DataBase ImageBy = new("ImageLibrary", "ImageBy" + marker);
             if (!join.Contains(marker)) return;
             switch (e.Key)
             {
@@ -159,14 +157,13 @@ namespace ImageDB
                     break;
                 case Key.C:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-                    {
                         buffer = currentItem.parameter[marker].ToString();
-                    }
                     break;
                 case Key.V:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
                         currentItem.parameter[marker] = buffer;
+                        ImageBy
                     }
                     break;
                 case Key.X:

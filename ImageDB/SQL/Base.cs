@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
+using System.Runtime.Versioning;
 using System.Windows.Forms;
 
 namespace ImageDB.SQL
 {
+    [SupportedOSPlatform("Windows")]
     public abstract class Base
     {
         protected readonly string Name,
@@ -27,13 +28,13 @@ namespace ImageDB.SQL
         }
 
         protected SqlConnection Connect() =>
-            new SqlConnection($"Server={Server}; " +
-                               "Integrated security=SSPI; " +
-                               "User=admin; " +
-                               "Password=admin; " +
-                              $"DataBase={Name}; " +
-                               "Trusted_Connection=False; " +
-                               "TrustServerCertificate=True; ");
+            new($"Server={Server}; " +
+                 "Integrated security=SSPI; " +
+                 "User=admin; " +
+                 "Password=admin; " +
+                $"DataBase={Name}; " +
+                  "Trusted_Connection=False; " +
+                  "TrustServerCertificate=True; ");
 
         protected void Send(SqlCommand command)
         {
@@ -48,14 +49,14 @@ namespace ImageDB.SQL
         public void Clear()
         {
             string commandText = $"DELETE FROM {Table}";
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             Send(command);
         }
         protected string[] ColumnName()
         {
-            List<string> column = new List<string>();
+            List<string> column = [];
             string commandText = $@"SELECT name FROM sys.dm_exec_describe_first_result_set('SELECT * FROM {Table}', NULL, 0) ;";
-            SqlCommand command = new SqlCommand(commandText, connection);
+            SqlCommand command = new(commandText, connection);
             connection.Open();
 
             using (SqlDataReader dataReader = command.ExecuteReader())
@@ -63,7 +64,7 @@ namespace ImageDB.SQL
                     column.Add(dataReader["name"].ToString());
 
             connection.Close();
-            return column.ToArray();
+            return [..column];
         }
     }
 }
