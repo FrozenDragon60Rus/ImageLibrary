@@ -7,6 +7,7 @@ using System.Windows.Input;
 using ImageDB.SQL;
 using System.Windows.Data;
 using System.Runtime.Versioning;
+using System.Diagnostics;
 
 namespace ImageDB
 {
@@ -74,7 +75,7 @@ namespace ImageDB
             System.Windows.Forms.FolderBrowserDialog FBD = new();
             if (FBD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address", Table.Image.Empty.parameter);
+                dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address");
                 XML.Info.Folder = FBD.SelectedPath;
                 dataBase.Load(ref TableList, join);
             }
@@ -114,7 +115,8 @@ namespace ImageDB
             DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
 
             marker.Add(CurrentItem.Id, button.Id, button.Marker);
-            CurrentItem.parameter = dataBase.LoadById(CurrentItem.Id, join);
+            CurrentItem.Set(
+                dataBase.LoadById(CurrentItem.Id, join));
 
             ImageData.Items.Refresh();
         }
@@ -129,18 +131,6 @@ namespace ImageDB
             ImageData.Items.Refresh();
         }
         #endregion
-
-        public IEnumerable<DataGridRow> GetDataGridRows(DataGrid grid)
-        {
-            var itemsSource = grid.ItemsSource;
-
-            if (itemsSource is null)  
-                yield return null;
-
-            foreach (var item in itemsSource)
-                if (grid.ItemContainerGenerator.ContainerFromItem(item) is DataGridRow row) 
-                    yield return row;
-        }
 
         private void ImageData_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -165,42 +155,47 @@ namespace ImageDB
         {
             string marker = ImageData.CurrentCell.Column.Header.ToString();
             var ImageBy = new DataBase("ImageLibrary", "ImageBy" + marker);
+
             if (!join.Contains(marker)) return;
+
             switch (e.Key)
             {
                 case Key.Delete:
                     ImageBy.Delete(CurrentItem.Id);
-                    CurrentItem.parameter[marker] = string.Empty;
+                    CurrentItem.Parameter[marker] = string.Empty;
                     break;
                 case Key.Back:
-                    if (CurrentItem.parameter[marker]
+                    if (CurrentItem.Parameter[marker]
                                    .ToString() == string.Empty)
                         return;
-                    string name = CurrentItem.parameter[marker]
+                    string name = CurrentItem.Parameter[marker]
                                                 .ToString()
                                                 .Split(',')
                                                 .Last();
                     int markerId = GetButtonId(name);
                     ImageBy.Delete(CurrentItem.Id, markerId);
 
-                    CurrentItem.parameter = dataBase.LoadById(CurrentItem.Id, join);
+                    CurrentItem.Set(
+                        dataBase.LoadById(CurrentItem.Id, join));
                     break;
                 case Key.C:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-                        buffer = CurrentItem.parameter[marker].ToString();
+                        buffer = CurrentItem.Parameter[marker].ToString();
                     break;
                 case Key.V:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        CurrentItem.parameter[marker] = buffer;
-
+                        CurrentItem.Parameter[marker] = buffer;
+                        string[] markerList = buffer.Split(",");
+                        foreach (string item in markerList)
+                            ImageBy.Add(CurrentItem.Id, GetButtonId(item), marker);
                     }
                     break;
                 case Key.X:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
                     {
-                        buffer = (CurrentItem.parameter[marker] as string);
-                        CurrentItem.parameter[marker] = string.Empty;
+                        buffer = (CurrentItem.Parameter[marker] as string);
+                        CurrentItem.Parameter[marker] = string.Empty;
                     }
                     break;
             }
@@ -208,9 +203,9 @@ namespace ImageDB
         }
         private int GetButtonId(string name)
         {
-            foreach (Button button in TagsGroup.Children)
+            foreach (MarkerButton button in TagsGroup.Children)
                 if (button.Content.ToString() == name)
-                    return (int)button.Tag;
+                    return button.Id;
             return -1;
         }
     }

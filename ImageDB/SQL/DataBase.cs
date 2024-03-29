@@ -68,7 +68,7 @@ namespace ImageDB.SQL
             SqlCommand command = new(commandText, Connection);
 
             foreach (string key in columns)
-                command.Parameters.AddWithValue(key, table.parameter[key]);
+                command.Parameters.AddWithValue(key, table.Parameter[key]);
             
             Send(command);
             
@@ -96,8 +96,8 @@ namespace ImageDB.SQL
                 commandText = $"({value}) ";
                 SqlCommand command = new(commandTextHeader + commandText, Connection);
 
-                foreach (string key in columns)
-                    command.Parameters.AddWithValue("@" + key, data.parameter[key].ToString());
+                foreach (string key in keys)
+                    command.Parameters.AddWithValue("@" + key, data.Parameter[key]);
                 
                 Send(command);
             }
@@ -135,12 +135,10 @@ namespace ImageDB.SQL
             {
                 while (dataReader.Read())
                 {
-                    data = new()
-                    {
-                        parameter = []
-                    };
+                    data = new();
+                    data.Set([]);
                     foreach (string key in columns)
-                        data.parameter.Add(key, dataReader[key]);
+                        data.Parameter.Add(key, dataReader[key]);
                     table.Add(data);
                 }
 
@@ -166,12 +164,10 @@ namespace ImageDB.SQL
             using (var dataReader = command.ExecuteReader())
                 while (dataReader.Read())
                 {
-                    data = new()
-                    {
-                        parameter = []
-                    };
+                    data = new();
+                    data.Set([]);
                     foreach (string key in columns.Concat(join))
-                        data.parameter.Add(key, dataReader[key]);
+                        data.Parameter.Add(key, dataReader[key]);
                     table.Add(data);
                 }
             Connection.Close();
@@ -235,8 +231,8 @@ namespace ImageDB.SQL
 
                 foreach (string key in columns)
                 {
-                    command.Parameters.AddWithValue("@" + key, data.parameter[key].ToString());
-                    command.Parameters.AddWithValue("@new" + key, data.parameter[key].ToString());
+                    command.Parameters.AddWithValue("@" + key, data.Parameter[key]);
+                    command.Parameters.AddWithValue("@new" + key, data.Parameter[key]);
                 }
 
                 Send(command);
@@ -251,18 +247,15 @@ namespace ImageDB.SQL
         /// <param name="folder">Адрес папки с файлами</param>
         /// <param name="name">Имя параметра формирующегося из папки</param>
         /// <param name="parameter">Значения столбцов по умолчанию</param>
-        public void FromFolder<T>(ref List<T> table, string folder, string name, Dictionary<string, object> parameter) where T : Data, new()
+        public void FromFolder<T>(ref List<T> table, string folder, string name) where T : Data, new()
         {
             string[] file = Directory.GetFiles(folder);
             T data;
             table.Clear();
             foreach (var item in file)
             {
-                data = new()
-                {
-                    parameter = new(parameter)
-                };
-                data.parameter[name] = item;
+                data = new();
+                data.Parameter[name] = item;
                 table.Add(data);
             }
             Add(table);
@@ -292,7 +285,7 @@ namespace ImageDB.SQL
         {
             string commandText = "DELETE \r\n" +
                                 $"FROM {Table} \r\n" +
-                                $"WHERE Id = {data.parameter["Id"]})\r\n";
+                                $"WHERE Id = {data.Parameter["Id"]}";
 
             SqlCommand command = new(commandText, Connection);
             Send(command);
@@ -303,7 +296,7 @@ namespace ImageDB.SQL
             {
                 string commandText = "DELETE \r\n" +
                                     $"FROM {Table} \r\n" +
-                                    $"WHERE Id = {_data.parameter["Id"]})\r\n";
+                                    $"WHERE Id = {_data.Parameter["Id"]}";
 
                 SqlCommand command = new(commandText, Connection);
                 Send(command);

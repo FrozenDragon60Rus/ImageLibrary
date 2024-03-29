@@ -7,32 +7,22 @@ namespace ImageDB.Table
 {
     public interface IData
     {
-        Dictionary<string, object> parameter { set; get; }
+        public Dictionary<string, object> Parameter { get; }
         object[] Value();
         string[] Key();
-        string[] ParameterName();
     }
     public class Data : IData
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Dictionary<string, object> parameter { get; set; }
+        public Dictionary<string, object> Parameter { protected set; get; }
         public object[] Value() =>
-            parameter.Values.ToArray();
+            Parameter.Values.ToArray();
         public string[] Key() =>
-            parameter.Keys.ToArray();
-        public string[] ParameterName()
-        {
-            string[] key = [..parameter.Keys];
-            for (int i = 0; i < key.Length; i++)
-                key[i] = "@" + key[i];
-            return key;
-        }
+            Parameter.Keys.ToArray();
 
         public Data(Dictionary<string, object> parameter) =>
-            this.parameter = parameter;
-        public Data()
-        {
-            parameter = [];
-        }
+            Parameter = parameter;
+        public Data() => Parameter = [];
+        public void Set(Dictionary<string, object> parameter) => Parameter = parameter;
     }
 }

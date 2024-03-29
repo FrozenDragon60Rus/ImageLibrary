@@ -8,23 +8,23 @@ namespace ImageDB.Table
     public class Image : Data
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get => (int)parameter[nameof(Id)]; }
-        public string Address { get => parameter[nameof(Address)].ToString(); }
-        public string Tag { get => parameter[nameof(Tag)].ToString(); }
-        public string Character { get => parameter[nameof(Character)].ToString(); }
-        public string Author { get => parameter[nameof(Author)].ToString(); }
-        public byte Rating { get => System.Convert.ToByte(parameter[nameof(Rating)]); }
+        public int Id { get => System.Convert.ToInt32(Parameter[nameof(Id)]); }
+        public string Address { get => Parameter[nameof(Address)].ToString(); }
+        public string Tag { get => Parameter[nameof(Tag)].ToString(); }
+        public string Character { get => Parameter[nameof(Character)].ToString(); }
+        public string Author { get => Parameter[nameof(Author)].ToString(); }
+        public byte Rating { get => System.Convert.ToByte(Parameter[nameof(Rating)]); }
 
         public Image(int Id, string Address, byte Rating) : base() =>
-            parameter = new Dictionary<string, object>() {
+            Parameter = new() {
                 { nameof(Id), Id },
                 { nameof(Address), Address },
                 { nameof(Rating), Rating }
             };
         public Image(Dictionary<string, object> parameter) : base(parameter) =>
-            this.parameter = parameter;
+            this.Parameter = parameter;
         public Image(string Address) : base() =>
-            parameter = new Dictionary<string, object>() {
+            Parameter = new() {
                 { "Id", -1 },
                 { "Address", Address },
                 { "Rating", 0 },
@@ -33,9 +33,9 @@ namespace ImageDB.Table
                 { "Author", string.Empty }
             };
         public Image() =>
-            parameter = Empty.parameter;
+            Parameter = Empty.Parameter;
 
         public static Image Empty =>
-            new Image(string.Empty);
+            new(string.Empty);
     }
 }
