@@ -136,9 +136,10 @@ namespace ImageDB.SQL
                 while (dataReader.Read())
                 {
                     data = new();
-                    data.Set([]);
+
                     foreach (string key in columns)
-                        data.Parameter.Add(key, dataReader[key]);
+                        data.Parameter[key] = dataReader[key];
+
                     table.Add(data);
                 }
 
@@ -164,10 +165,11 @@ namespace ImageDB.SQL
             using (var dataReader = command.ExecuteReader())
                 while (dataReader.Read())
                 {
-                    data = new();
-                    data.Set([]);
+                    data = new T();
+
                     foreach (string key in columns.Concat(join))
-                        data.Parameter.Add(key, dataReader[key]);
+                        data.Parameter[key] = dataReader[key];
+
                     table.Add(data);
                 }
             Connection.Close();

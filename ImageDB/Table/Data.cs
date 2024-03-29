@@ -23,6 +23,5 @@ namespace ImageDB.Table
         public Data(Dictionary<string, object> parameter) =>
             Parameter = parameter;
         public Data() => Parameter = [];
-        public void Set(Dictionary<string, object> parameter) => Parameter = parameter;
     }
 }

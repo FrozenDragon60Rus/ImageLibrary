@@ -7,7 +7,6 @@ using System.Windows.Input;
 using ImageDB.SQL;
 using System.Windows.Data;
 using System.Runtime.Versioning;
-using System.Diagnostics;
 
 namespace ImageDB
 {
@@ -67,71 +66,6 @@ namespace ImageDB
                 TagsGroup.Children.Add(new MarkerButton(Tag.Name, Tag.Id, join.First(), AddEvent, RemoveEvent));
         }
 
-        #region button_event
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (dataBase.State == System.Data.ConnectionState.Open) return;
-
-            System.Windows.Forms.FolderBrowserDialog FBD = new();
-            if (FBD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address");
-                XML.Info.Folder = FBD.SelectedPath;
-                dataBase.Load(ref TableList, join);
-            }
-            ImageData.Items.Refresh();
-        }
-
-        private void Button_Refresh(object sender, RoutedEventArgs e)
-        {
-            if (dataBase.State == System.Data.ConnectionState.Open) return;
-            dataBase.Refresh(ref TableList, "Address");
-            ImageData.Items.Refresh();
-            
-        }
-        private void Button_Delete(object sender, RoutedEventArgs e)
-        {
-            if (CurrentItem == null) return;
-            TableList.Remove(CurrentItem);
-            dataBase.Delete(CurrentItem);
-            ImageData.Items.Refresh();
-        }
-        private void Button_Delete_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (CurrentItem == null) return;
-            int selectRow = TableList.IndexOf(CurrentItem);
-
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
-            {
-                dataBase.Delete(TableList.GetRange(selectRow, TableList.Count - selectRow));
-                TableList.RemoveRange(selectRow, TableList.Count - selectRow);
-            }
-            
-            ImageData.Items.Refresh();
-        }
-        public void AddEvent(object sender, EventArgs e)
-        {
-            var button = sender as MarkerButton;
-            DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
-
-            marker.Add(CurrentItem.Id, button.Id, button.Marker);
-            CurrentItem.Set(
-                dataBase.LoadById(CurrentItem.Id, join));
-
-            ImageData.Items.Refresh();
-        }
-        public void RemoveEvent(object sender, EventArgs e)
-        {
-            var button = sender as MarkerButton;
-
-            DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
-
-            marker.Delete(CurrentItem.Id, button.Id);
-
-            ImageData.Items.Refresh();
-        }
-        #endregion
-
         private void ImageData_MouseDown(object sender, MouseButtonEventArgs e)
         {
 
@@ -175,7 +109,7 @@ namespace ImageDB
                     int markerId = GetButtonId(name);
                     ImageBy.Delete(CurrentItem.Id, markerId);
 
-                    CurrentItem.Set(
+                    CurrentItem = new(
                         dataBase.LoadById(CurrentItem.Id, join));
                     break;
                 case Key.C:
