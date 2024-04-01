@@ -7,6 +7,7 @@ using System.IO;
 using ImageDB.Table;
 using System.Data;
 using System.Runtime.Versioning;
+using System.Diagnostics;
 
 namespace ImageDB.SQL
 {
@@ -58,7 +59,7 @@ namespace ImageDB.SQL
         {
             string commandText = $"INSERT INTO {Table} ";
 
-            string[] keys = columns.Where(k => k != Primary).ToArray();
+            var keys = columns.Where(k => k != Primary).ToArray();
             string column = Quary.Column(keys),
                    value = Quary.Value(keys);
 
@@ -157,7 +158,7 @@ namespace ImageDB.SQL
                 commandText += $", Join{j}.{j}";
             commandText += $"\r\nFROM {Table} \r\n";
 
-            commandText += Quary.JoinTable(Table, join);
+            commandText += Quary.Join(Table, join);
 
             SqlCommand command = new(commandText, Connection);
             T data;
@@ -184,7 +185,7 @@ namespace ImageDB.SQL
                 commandText += $", Join{j}.{j}";
             commandText += $"\r\nFROM {Table} \r\n";
 
-            commandText += Quary.JoinTable(Table, join);
+            commandText += Quary.Join(Table, join);
             commandText += $"\r\nWHERE Id = {Id}";
 
             Connection.Open();
@@ -221,7 +222,7 @@ namespace ImageDB.SQL
 
             foreach (T data in table)
             {
-                columnWithValue = Quary.ColumnWithValue(keys);
+                columnWithValue = Quary.AssignValueToColumn(keys);
 
                 commandText = $"USING (SELECT {columnWithValue}) as new \r\n" +
                               $"ON {Table}.{name} = new.{name} \r\n" +
@@ -251,7 +252,7 @@ namespace ImageDB.SQL
         /// <param name="parameter">Значения столбцов по умолчанию</param>
         public void FromFolder<T>(ref List<T> table, string folder, string name) where T : Data, new()
         {
-            string[] file = Directory.GetFiles(folder);
+            var file = Directory.GetFiles(folder);
             T data;
             table.Clear();
             foreach (var item in file)

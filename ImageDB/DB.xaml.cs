@@ -48,7 +48,7 @@ namespace ImageDB
                 {
                     Header = name,
                     Binding = new Binding(name),
-                    IsReadOnly = true
+                    IsReadOnly = true,
                 };
                 if (join.Contains(column.Header)) column.MaxWidth = 150;
 
@@ -75,6 +75,7 @@ namespace ImageDB
         {
             if (ImageData.CurrentCell.IsValid)
                 CurrentItem = ImageData.CurrentCell.Item as Table.Image;
+            
         }
 
         

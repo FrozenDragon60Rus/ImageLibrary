@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Windows;
 
 namespace ImageDB.Table
 {
@@ -21,8 +19,7 @@ namespace ImageDB.Table
                 { nameof(Address), Address },
                 { nameof(Rating), Rating }
             };
-        public Image(Dictionary<string, object> parameter) : base(parameter) =>
-            this.Parameter = parameter;
+        public Image(Dictionary<string, object> parameter) : base(parameter) { }
         public Image(string Address) : base() =>
             Parameter = new() {
                 { "Id", -1 },
@@ -32,8 +29,7 @@ namespace ImageDB.Table
                 { "Character", string.Empty },
                 { "Author", string.Empty }
             };
-        public Image() =>
-            Parameter = Empty.Parameter;
+        public Image() : base() => Parameter = Empty.Parameter;
 
         public static Image Empty =>
             new(string.Empty);

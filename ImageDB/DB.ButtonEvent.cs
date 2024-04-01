@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using ImageDB.SQL;
-using System.Windows.Data;
-using System.Runtime.Versioning;
+using System.Diagnostics;
 
 namespace ImageDB
 {
@@ -60,8 +56,11 @@ namespace ImageDB
             DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
 
             marker.Add(CurrentItem.Id, button.Id, button.Marker);
-            CurrentItem = new(
+
+            int index = TableList.IndexOf(CurrentItem);
+            TableList[index] = new(
                 dataBase.LoadById(CurrentItem.Id, join));
+            CurrentItem = TableList[index];
 
             ImageData.Items.Refresh();
         }

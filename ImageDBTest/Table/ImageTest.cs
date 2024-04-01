@@ -15,12 +15,19 @@ namespace ImageDBTest.Table
             Assert.Equal(address, TestData.Address);
             Assert.Equal(Rating, TestData.Rating);
         }
-        [Fact]
-        public void ImageEmptySameTest()
+        [Theory, InlineData("", "", "")]
+        public void ImageCheckAdditionalDataTest(string tag, string character, string author)
         {
-            var data = new Image(string.Empty);
+            Assert.Equal(tag, TestData.Tag);
+            Assert.Equal(character, TestData.Character);
+            Assert.Equal(author, TestData.Author);
+        }
+        [Fact]
+        public void ImageIsEmptyTest()
+        {
+            Image data = new(string.Empty);
 
-            Assert.Same(TestData, data);
+            Assert.Equal(data, TestData);
         }
         public void Dispose() =>
             GC.SuppressFinalize(this);

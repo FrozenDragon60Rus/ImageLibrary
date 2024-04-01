@@ -10,16 +10,23 @@ namespace ImageDB.SQL
     internal static class Quary
     {
         public static string Column(string[] keys) =>
-            string.Join(",", keys);
+            keys.Contains(string.Empty) ? throw new Exception("Can't be empty") 
+                                        : string.Join(",", keys);
         public static string Value(string[] keys)
         {
+            if (keys.Contains(string.Empty)) 
+                throw new Exception("Can't be empty");
+
             string[] value = new string[keys.Length];
             for (int i = 0; i < keys.Length; i++)
                 value[i] = "@" + keys[i];
             return string.Join(",", value);
         }
-        public static string ColumnWithValue(string[] keys)
+        public static string AssignValueToColumn(string[] keys)
         {
+            if (keys.Contains(string.Empty))
+                throw new Exception("Can't be empty");
+
             string[] query = new string[keys.Length];
 
             for (int i = 0;i < keys.Length;i++)
@@ -27,20 +34,7 @@ namespace ImageDB.SQL
 
             return string.Join(",", query);
         }
-        public static string ColumnWithValue(string[] keys, int[] blackIndex)
-        {
-            string[] query = new string[keys.Length - blackIndex.Length];
-
-            int index = 0;
-            for (int i = 0; i < keys.Length; i++)
-                if (blackIndex.Contains(i))
-                    continue;
-                else
-                    query[index++] = $"{keys[i]}=@new{keys[i]}";
-
-            return string.Join(",", query);
-        }
-        public static string JoinTable(string Table, string[] join)
+        public static string Join(string Table, string[] join)
         {
             string commandText = string.Empty;
             foreach (string tableName in join)
