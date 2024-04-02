@@ -1,27 +1,23 @@
 ﻿using ImageLibrary.SQL;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
-using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 namespace ImageLibrary
 {
     internal class TagButton
     {
         public double Width;
-        SearchParameter searchParameter;
-        public void Fill(Grid TagsGroup, double Width, ref SearchParameter searchParameter)
+        Filter filter;
+        public void Fill(Grid TagsGroup, double Width, ref Filter filter)
         {
             this.Width = Width;
-            this.searchParameter = searchParameter;
+            this.filter = filter;
 
-            DataBase tagDB = new DataBase("ImageLibrary", "Tag");
-            List<string> tag = tagDB.Load("Name");
+            var tagDB = new DataBase("ImageLibrary", "Tag");
+            var tag = tagDB.Load("Name");
 
             //Array.Sort(tag, StringComparer.InvariantCulture);
 
@@ -31,7 +27,7 @@ namespace ImageLibrary
 
         private Button Create(string name, int num)
         {
-            Button b = new Button()
+            var b = new Button()
             {
                 Name = name + "_button",
                 Content = name,
@@ -53,22 +49,19 @@ namespace ImageLibrary
             return b;
 
         }
-        private void FillTagButton()
-        {
-            
-        }
         private void Check_tag(object sender, RoutedEventArgs e)
         {
             Button b = sender as Button;
             string item = b.Content.ToString();
             if (b.Background == Brushes.White)
             {
-                searchParameter.tag.Add(item);
+				filter.Tag.Add(item);
+                Debug.WriteLine(filter.Marker["Tag"].IndexOf(item));
                 b.Background = Brushes.Gray;
             }
             else
             {
-                searchParameter.tag.Remove(item);
+				filter.Tag.Remove(item);
                 b.Background = Brushes.White;
             }
         }

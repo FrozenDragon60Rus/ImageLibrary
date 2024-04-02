@@ -13,18 +13,18 @@ namespace ImageLibrary
     internal class ImageControl
     {
         public Image[] Images;
-        private Grid Viewer;
-        DataBase dataBase;
+        private Grid Viewer { get; }
+        private readonly DataBase dataBase;
         public readonly int imageCount; 
         public ImageControl(ref Grid viewer)
         {
             Viewer = viewer;
-            dataBase = new DataBase("ImageLibrary", "dbo.Image");
+            dataBase = new DataBase("ImageLibrary", "Image");
             imageCount = dataBase.GetRowCount();
         }
         static public Vector Resize(Vector vector1, Vector vector2)
         {
-            Vector vector = new Vector();
+            Vector vector = new();
             double percent;
 
             if (vector2.X > vector2.Y)
@@ -59,7 +59,7 @@ namespace ImageLibrary
         {
             Image img, bg;
 
-            BitmapImage bi = new BitmapImage();
+            BitmapImage bi = new();
             bi.BeginInit();
             bi.UriSource = new Uri(Directory.GetCurrentDirectory() + @"\bg.png");
             bi.EndInit();
@@ -86,15 +86,15 @@ namespace ImageLibrary
             Viewer.Children.Add(bg);
             Viewer.Children.Add(img);
         }
-        public void Load(int imageCount, int currentPage, Vector size)
+        public void Load(int imageCount, int currentPage, Vector size, Filter filter)
         {
             int offset = currentPage * 10,
                 count = offset + 10 > imageCount ? imageCount - offset
                                                  : offset + 10; ;
-            List<string> imageName = dataBase.Load(offset, count);
+            var imageName = dataBase.Load(offset, count, filter);
             for (int i = 0; i < imageName.Count; i++)
             {
-                BitmapImage bi = new BitmapImage();
+                BitmapImage bi = new();
                 bi.BeginInit();
                 //Console.WriteLine(imageName[i]);
                 bi.UriSource = new Uri(imageName[i]);
@@ -120,11 +120,12 @@ namespace ImageLibrary
                     Images[i].Height = 0;
                 }
         }
-        public BitmapImage ToBitmapImage(System.Drawing.Bitmap src)
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>")]
+		private BitmapImage ToBitmapImage(System.Drawing.Bitmap src)
         {
-            MemoryStream ms = new MemoryStream();
+            var ms = new MemoryStream();
             src.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-            BitmapImage image = new BitmapImage();
+            BitmapImage image = new();
             image.BeginInit();
             ms.Seek(0, SeekOrigin.Begin);
             image.StreamSource = ms;

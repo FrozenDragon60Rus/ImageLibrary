@@ -16,13 +16,13 @@ namespace MyImageLibrary
     /// </summary>
     public partial class ImageLibrary : Window
     {
-        public short imageOnPage = 10,
-                     imageRow = 2;
-        private int MaxImage = 10;
+        private readonly short imageOnPage = 10,
+                               imageRow = 2;
+        private readonly int MaxImage = 10;
 
         ImageControl imageControl;
-        SearchParameter searchParameter;
-        public Vector imageSize
+        Filter filter = new();
+        public Vector ImageSize
         {
             get
             {
@@ -33,7 +33,7 @@ namespace MyImageLibrary
                 return new Vector(x, y);
             }
         }
-        private int currentPage
+        private int CurrentPage
         {
             set {
                 if (value < 0)
@@ -51,53 +51,12 @@ namespace MyImageLibrary
             InitializeComponent();
         }
 
-        private void LeftPage_KeyUp(object sender, KeyEventArgs e)
-        {
-            
-        }
-
-        private void LeftPage_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            Console.WriteLine("Left_" + currentPage);
-            currentPage--;
-            imageControl.Load(imageOnPage, 
-                              currentPage,
-                              imageSize);
-        }
-
-        private void RightPage_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            Console.WriteLine("Right_" + currentPage);
-            currentPage++;
-            imageControl.Load(imageOnPage, 
-                              currentPage, 
-                              imageSize);
-        }
-        
-
-        private void TextBox_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                // @"F:\ЯДиск\C#\MyImageLibrary\MyImageLibrary\bin\Debug\DB\furry.db"
-                try
-                {                    
-                    imageControl.Load(imageOnPage, currentPage, imageSize);
-                }
-                catch (IOException)
-                {
-                    Console.WriteLine("Файл занят ");                           
-                }
-                currentPage = 0;
-            }
-        }
-
         private void FillImageGrid()
         {
             int countOnLine = (int)Math.Floor((float)(imageOnPage / imageRow));
             double imageMarginX = 2, imageMarginY = 2;
             imageControl.Images = new Image[imageOnPage];
-            Vector size = imageSize;
+            Vector size = ImageSize;
             Image img;
 
             for (int i = 0; i < imageOnPage; i++)
@@ -123,7 +82,7 @@ namespace MyImageLibrary
                 imageControl.Images[i] = img;
                 ImageGroup.Children.Add(imageControl.Images[i]);
             }
-            imageControl.Load(imageOnPage, currentPage, imageSize);
+            //imageControl.Load(imageOnPage, CurrentPage, ImageSize, filter);
             //Console.WriteLine("end");
         }
 
@@ -137,28 +96,6 @@ namespace MyImageLibrary
         private void ImageClose(object sender, MouseButtonEventArgs e)
         {
             Viewer.Children.Clear();
-        }
-
-        private void ShowTags_Click(object sender, RoutedEventArgs e)
-        {
-            if (BorderGroup.Visibility == Visibility.Visible)
-            {
-                BorderGroup.Visibility = Visibility.Hidden;
-                TagsBox.Visibility = Visibility.Visible;
-                return;
-            }
-            BorderGroup.Visibility = Visibility.Visible;
-            TagsBox.Visibility = Visibility.Hidden;
-
-            try
-            {
-                currentPage = 0;
-                imageControl.Load(imageOnPage, currentPage, imageSize);
-            }
-            catch (IOException)
-            {
-                Console.WriteLine("Файл занят ");
-            }
         }
 
         private void GroupSize()
@@ -176,7 +113,7 @@ namespace MyImageLibrary
             imageControl = new ImageControl(ref Viewer);
             GroupSize();
             FillImageGrid();
-            new TagButton().Fill(TagsGroup, TagsBox.Width, ref searchParameter);
+            new TagButton().Fill(TagsGroup, TagsBox.Width, ref filter);
             Console.WriteLine(MaxImage);
         }
     }
