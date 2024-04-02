@@ -15,7 +15,7 @@ namespace ImageDB
             System.Windows.Forms.FolderBrowserDialog FBD = new();
             if (FBD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address");
+                dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address", join);
                 XML.Info.Folder = FBD.SelectedPath;
                 dataBase.Load(ref TableList, join);
             }

@@ -128,7 +128,6 @@ namespace ImageDB.SQL
             string commandText = "SELECT * " +
                                 $"FROM {Table} ";
 
-            Console.WriteLine (Table);
             SqlCommand command = new(commandText, Connection);
             T data;
             Connection.Open();
@@ -251,11 +250,11 @@ namespace ImageDB.SQL
         /// <param name="folder">Адрес папки с файлами</param>
         /// <param name="name">Имя параметра формирующегося из папки</param>
         /// <param name="parameter">Значения столбцов по умолчанию</param>
-        public void FromFolder<T>(ref List<T> table, string folder, string name) where T : Data, new()
+        public void FromFolder<T>(ref List<T> table, string folder, string name, string[] join) where T : Data, new()
         {
             var file = Directory.GetFiles(folder);
             T data;
-            table.Clear();
+            Clear(table, join);
             string[] extensionList = ["jpg, png, jpeg, gif, bmp"];
             foreach (var item in file)
             {
@@ -304,6 +303,19 @@ namespace ImageDB.SQL
                                     $"WHERE Id = {_data.Parameter["Id"]}";
 
                 SqlCommand command = new(commandText, Connection);
+                Send(command);
+            }
+        }
+        public void Clear<T>(List<T> table, string[] join) where T : Data
+        {
+			table.Clear();
+            Clear();
+            string commandText;
+            SqlCommand command;
+			foreach (var item in join)
+            {
+                commandText = $"DELETE FROM {Table}BY{item}\r\n;";
+                command = new(commandText, Connection);
                 Send(command);
             }
         }

@@ -27,13 +27,13 @@ namespace ImageDB.SQL
         }
 
         protected SqlConnection Connect() =>
-            new($"Server={Server}; " +
-                 "Integrated security=SSPI; " +
-                 "User=admin; " +
-                 "Password=admin; " +
-                $"DataBase={Name}; " +
+            new($@"Server={Server}; " +
+                  "Integrated security=SSPI; " +
+                  "User=admin; " +
+                  "Password=admin; " +
+                $@"DataBase={Name}; " +
                   "Trusted_Connection=False; " +
-                  "TrustServerCertificate=True; ");
+                  "TrustServerCertificate=True;");
 
         protected void Send(SqlCommand command)
         {
@@ -47,7 +47,8 @@ namespace ImageDB.SQL
         }
         public void Clear()
         {
-            string commandText = $"DELETE FROM {Table}";
+            string commandText = $"DBCC CHECKIDENT(Image, RESEED, 0) " +
+                                 $@"DELETE FROM {Table}";
             SqlCommand command = new(commandText, Connection);
             Send(command);
         }

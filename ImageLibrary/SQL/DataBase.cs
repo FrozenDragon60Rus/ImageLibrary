@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Data;
-using System.Linq;
-using System;
 using System.Diagnostics;
 
 namespace ImageLibrary.SQL
