@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageDB", "ImageDB\ImageDB.csproj", "{15B2C19E-D4DB-4391-99A2-3B035D1AC0D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageLibrary", "ImageLibrary\ImageLibrary.csproj", "{EAA686EC-0E12-4CB0-8642-22C0F8361834}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageLibrary", "ImageLibrary\ImageLibrary.csproj", "{EAA686EC-0E12-4CB0-8642-22C0F8361834}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageDBTest", "ImageDBTest\ImageDBTest.csproj", "{5D52B5DD-F830-4836-BBE7-4528A8DA134C}"
 EndProject

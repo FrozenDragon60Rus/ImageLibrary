@@ -220,7 +220,8 @@ namespace ImageDB.SQL
             column = Quary.Column(keys);
             value = Quary.Value(keys);
 
-            foreach (T data in table)
+			string[] extensionList = ["jpg, png, jpeg, gif, bmp"];
+			foreach (T data in table)
             {
                 columnWithValue = Quary.AssignValueToColumn(keys);
 
@@ -255,6 +256,7 @@ namespace ImageDB.SQL
             var file = Directory.GetFiles(folder);
             T data;
             table.Clear();
+            string[] extensionList = ["jpg, png, jpeg, gif, bmp"];
             foreach (var item in file)
             {
                 data = new();

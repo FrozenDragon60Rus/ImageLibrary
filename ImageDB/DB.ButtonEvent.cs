@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Input;
 using ImageDB.SQL;
-using System.Diagnostics;
 
 namespace ImageDB
 {
