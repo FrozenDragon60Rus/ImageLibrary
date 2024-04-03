@@ -9,28 +9,30 @@ namespace ImageDB.SQL
 {
     internal static class Quary
     {
-        public static string Column(string[] keys) =>
+        public static string Column(IEnumerable<string> keys) =>
             keys.Contains(string.Empty) ? throw new Exception("Can't be empty") 
                                         : string.Join(",", keys);
-        public static string Value(string[] keys)
+        public static string Value(IEnumerable<string> keys)
         {
             if (keys.Contains(string.Empty)) 
                 throw new Exception("Can't be empty");
 
-            string[] value = new string[keys.Length];
-            for (int i = 0; i < keys.Length; i++)
-                value[i] = "@" + keys[i];
+            string[] value = new string[keys.Count()];
+            int index = 0;
+            foreach (var key in keys)
+                value[index++] = "@" + key;
             return string.Join(",", value);
         }
-        public static string AssignValueToColumn(string[] keys)
+        public static string AssignValueToColumn(IEnumerable<string> keys)
         {
             if (keys.Contains(string.Empty))
                 throw new Exception("Can't be empty");
 
-            string[] query = new string[keys.Length];
+            string[] query = new string[keys.Count()];
 
-            for (int i = 0;i < keys.Length;i++)
-                query[i] = $"{keys[i]}=@new{keys[i]}";
+			int index = 0;
+			foreach (var key in keys)
+				query[index++] = $"{key}=@new{key}";
 
             return string.Join(",", query);
         }

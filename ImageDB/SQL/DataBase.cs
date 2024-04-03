@@ -7,7 +7,7 @@ using System.IO;
 using ImageDB.Table;
 using System.Data;
 using System.Runtime.Versioning;
-using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace ImageDB.SQL
 {
@@ -55,29 +55,29 @@ namespace ImageDB.SQL
         }
 
         #region Add
-        public void Add<T>(T table) where T : Data, new()
+        public void Add<T>(T table) where T : IData, new()
         {
             string commandText = $"INSERT INTO {Table} ";
 
-            var keys = columns.Where(k => k != Primary).ToArray();
+            var keys = columns.Where(k => k != Primary);
             string column = Quary.Column(keys),
                    value = Quary.Value(keys);
 
             commandText += $"({column}) " +
-                           $"VALUES {value}";
+                           $"VALUES ({value})";
             
             SqlCommand command = new(commandText, Connection);
 
-            foreach (string key in columns)
+            foreach (var key in columns)
                 command.Parameters.AddWithValue(key, table.Parameter[key]);
             
             Send(command);
             
         }
         
-        public void Add<T>(List<T> table) where T : Data, new()
+        public void Add<T>(IEnumerable<T> table) where T : IData, new()
         {
-            if (table.Count == 0) return;
+            if (!table.Any()) return;
             Clear();
 
             string commandTextHeader = $"INSERT INTO {Table} ",
@@ -85,7 +85,7 @@ namespace ImageDB.SQL
                        column,
                        value;
 
-            string[] keys = columns.Where(k => k != Primary).ToArray();
+            var keys = columns.Where(k => k != Primary);
             column = Quary.Column(keys);
             value = Quary.Value(keys);
 
@@ -118,65 +118,32 @@ namespace ImageDB.SQL
             SqlCommand command = new(commandText, Connection);
             Send(command);
         }
-        #endregion
+		#endregion
 
-        #region Load
-        public void Load<T>(ref List<T> table) where T : Data, new()
-        {
-            table.Clear();
+		#region Load
+		public IEnumerable<T> Load<T>() where T : IData, new()
+		{
+			string commandText = "SELECT * " +
+								$"FROM {Table} ";
 
-            string commandText = "SELECT * " +
-                                $"FROM {Table} ";
+			return Read<T>(commandText, columns);
+		}
+		public IEnumerable<T> Load<T>(string[] join) where T : IData, new()
+		{
+			string commandText = "SELECT ";
+			commandText += Quary.Column(columns);
 
-            SqlCommand command = new(commandText, Connection);
-            T data;
-            Connection.Open();
-            using (var dataReader = command.ExecuteReader())
-            {
-                while (dataReader.Read())
-                {
-                    data = new();
+			foreach (string j in join)
+				commandText += $", Join{j}.{j}\r\n";
+			commandText += $"FROM {Table} \r\n";
 
-                    foreach (string key in columns)
-                        data.Parameter[key] = dataReader[key];
+			commandText += Quary.Join(Table, join);
 
-                    table.Add(data);
-                }
-
-            }
-            Connection.Close();
-        }
-        public void Load<T>(ref List<T> table, string[] join) where T : Data, new()
-        {
-            table.Clear();
-
-            string commandText = "SELECT ";
-            commandText += Quary.Column(columns);
-
-            foreach (string j in join)
-                commandText += $", Join{j}.{j}";
-            commandText += $"\r\nFROM {Table} \r\n";
-
-            commandText += Quary.Join(Table, join);
-
-            SqlCommand command = new(commandText, Connection);
-            T data;
-            Connection.Open();
-            using (var dataReader = command.ExecuteReader())
-                while (dataReader.Read())
-                {
-                    data = new T();
-
-                    foreach (string key in columns.Concat(join))
-                        data.Parameter[key] = dataReader[key];
-
-                    table.Add(data);
-                }
-            Connection.Close();
-        }
+			var allColumns = columns.Concat(join);
+			return Read<T>(commandText, allColumns);
+		}
         public Dictionary<string, object> LoadById(int Id, string[] join)
         {
-            Dictionary<string, object> parameter = [];
             string commandText = "SELECT ";
             commandText += Quary.Column(columns);
 
@@ -187,85 +154,59 @@ namespace ImageDB.SQL
             commandText += Quary.Join(Table, join);
             commandText += $"\r\nWHERE Id = {Id}";
 
-            Connection.Open();
-            SqlCommand command = new(commandText, Connection);
-            using (SqlDataReader dataReader = command.ExecuteReader())
-                if (dataReader.Read())
-                    foreach (string key in columns.Concat(join))
-                        parameter.Add(key, dataReader[key]);
+            var allColumns = columns.Concat(join);
 
-            Connection.Close();
-            return parameter;
+            return Read<Data>(commandText, allColumns).First().Parameter;
         }
         #endregion
 
-        public void Refresh<T>(ref List<T> table, string name) where T : Data
+        public void Refresh<T>(IEnumerable<T> table, string name) where T : IData, new()
         {
-            string commandTextHeader = $"MERGE INTO {Table} \r\n",
-                   commandText,
-                   column,
-                   value,
-                   columnWithValue;
-
-            if (XML.Info.Folder == string.Empty)
-            {
-                MessageBox.Show("База не была сформирована или отсутствуют данные о её формировании");
-                return;
-            }
-            string[] file = Directory.GetFiles(XML.Info.Folder);
-            SqlCommand command;
-
-            string[] keys = columns.Where(k => k != Primary).ToArray();
-            column = Quary.Column(keys);
-            value = Quary.Value(keys);
+            IEnumerable<object> files = Directory.GetFiles(XML.Info.Folder);
 
 			string[] extensionList = ["jpg, png, jpeg, gif, bmp"];
-			foreach (T data in table)
-            {
-                columnWithValue = Quary.AssignValueToColumn(keys);
+            var address = table.Select(t => t.Parameter["Address"]);
+            files = files.Except(address);
 
-                commandText = $"USING (SELECT {columnWithValue}) as new \r\n" +
-                              $"ON {Table}.{name} = new.{name} \r\n" +
-                               "WHEN NOT MATCHED THEN \r\n" +
-                              $"INSERT ({column}) \r\n" +
-                              $"VALUES ({value});";
-
-                command = new(commandTextHeader + commandText, Connection);
-
-                foreach (string key in columns)
-                {
-                    command.Parameters.AddWithValue("@" + key, data.Parameter[key]);
-                    command.Parameters.AddWithValue("@new" + key, data.Parameter[key]);
-                }
-
-                Send(command);
-            }
-            
-        }
-
-        /// <summary>
-        /// Формирует список файлов находящихся в папке по адресу folder и записыват их в поле name
-        /// </summary>
-        /// <param name="table">Таблица базы данных</param>
-        /// <param name="folder">Адрес папки с файлами</param>
-        /// <param name="name">Имя параметра формирующегося из папки</param>
-        /// <param name="parameter">Значения столбцов по умолчанию</param>
-        public void FromFolder<T>(ref List<T> table, string folder, string name, string[] join) where T : Data, new()
-        {
-            var file = Directory.GetFiles(folder);
-            T data;
-            Clear(table, join);
-            string[] extensionList = ["jpg, png, jpeg, gif, bmp"];
-            foreach (var item in file)
-            {
+			T data;
+            foreach (var file in files) {
                 data = new();
-                data.Parameter[name] = item;
-                table.Add(data);
+                data.Parameter[name] = file;
+                table = table.Append(data);
+                Add(data);
             }
-            Add(table);
         }
-        #region Delete
-        public void Delete(int imageId)
+
+		public IEnumerable<T> Read<T>(string commandText, IEnumerable<string> columns) where T : IData, new()
+		{
+			IEnumerable<T> table = [];
+
+			try
+			{
+				T data;
+				SqlCommand command = new(commandText, Connection);
+				Connection.Open();
+				using var dataReader = command.ExecuteReader();
+				while (dataReader.Read())
+				{
+					data = new T();
+
+					foreach (var key in columns)
+						data.Parameter[key] = dataReader[key];
+
+					table = table.Append(data);
+				}
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
+			finally { Connection.Close(); }
+            return table;
+		}
+
+		#region Delete
+		public void Delete(int imageId)
         {
             string commandText = "DELETE \r\n" +
                                 $"FROM {Table} \r\n" +
@@ -285,7 +226,7 @@ namespace ImageDB.SQL
             Send(command);
         }
         
-        public void Delete<T>(T data) where T : Data
+        public void Delete<T>(T data) where T : IData
         {
             string commandText = "DELETE \r\n" +
                                 $"FROM {Table} \r\n" +
@@ -294,7 +235,7 @@ namespace ImageDB.SQL
             SqlCommand command = new(commandText, Connection);
             Send(command);
         }
-        public void Delete<T>(List<T> data) where T : Data
+        public void Delete<T>(List<T> data) where T : IData
         {
             foreach (var _data in data)
             {
@@ -306,19 +247,6 @@ namespace ImageDB.SQL
                 Send(command);
             }
         }
-        public void Clear<T>(List<T> table, string[] join) where T : Data
-        {
-			table.Clear();
-            Clear();
-            string commandText;
-            SqlCommand command;
-			foreach (var item in join)
-            {
-                commandText = $"DELETE FROM {Table}BY{item}\r\n;";
-                command = new(commandText, Connection);
-                Send(command);
-            }
-        }
-        #endregion
+		#endregion
     }
 }

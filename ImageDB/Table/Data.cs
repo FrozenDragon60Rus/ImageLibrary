@@ -24,17 +24,10 @@ namespace ImageDB.Table
         public Data(Dictionary<string, object> parameter) =>
             Parameter = parameter;
         public Data() => Parameter = [];
-        public void AddOrUpdate(string key, object value)
-        {
-            if (Parameter.ContainsKey(key))
-                Parameter[key] = value;
-            else
-                Parameter.Add(key, value);
-        }
         public static bool operator ==(Data left, Data right) =>
-            left.Parameter == right.Parameter;
+            right is not null && left.Parameter == right.Parameter;
         public static bool operator !=(Data left, Data right) =>
-            left.Parameter != right.Parameter;
+			right is not null && left.Parameter != right.Parameter;
         public override bool Equals(object obj) =>
             obj.GetType() == GetType() &&
             Parameter.SequenceEqual((obj as Data).Parameter);

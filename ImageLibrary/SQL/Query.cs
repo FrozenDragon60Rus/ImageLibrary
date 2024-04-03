@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ImageLibrary.SQL
 {
 	internal static class Query
 	{
-		public static string TemporaryTable<T>(string marker, List<T> parameter)
+		public static string TemporaryTable<T>(string marker, IEnumerable<T> parameter)
 		{
-			Debug.WriteLine(marker + " " + parameter.Count);
+			Debug.WriteLine(marker + " " + parameter.Count());
 			ArgumentNullException.ThrowIfNull(parameter);
-			if (parameter.Count == 0) return string.Empty;
+			if (!parameter.Any()) return string.Empty;
 			
-			string[] strParameter = new string[parameter.Count];
+			string[] strParameter = new string[parameter.Count()];
 			int index = 0;
 			foreach (var item in parameter)
 				strParameter[index++] = $"('{item}')";
@@ -26,10 +27,10 @@ namespace ImageLibrary.SQL
 
 			return commandText;
 		}
-		public static string Join(string Table, string[] join, Filter filter)
+		public static string Join(string Table, IEnumerable<string> join, Filter filter)
 		{
 			string commandText = string.Empty;
-			foreach (string marker in join)
+			foreach (var marker in join)
 				commandText += "\r\nLEFT JOIN( \r\n" +
 								   $"SELECT {Table}By{marker}.{Table}_Id, STRING_AGG(CAST({marker}.Name AS VARCHAR(1024)), ',') AS {marker} \r\n" +
 								   $"FROM {Table}By{marker} \r\n" +
@@ -41,26 +42,25 @@ namespace ImageLibrary.SQL
 							  $"ON {Table}.Id = Join{marker}.{Table}_Id\r\n";
 			return commandText;
 		}
-		public static string Filter<T>(string name, List<T> filter) =>
-			filter.Count > 0 ? $"['{string.Join(',', filter)}'] IN Join{name}.{name}"
-							 : string.Empty;
 		public static string Where(Filter filter)
 		{
-			List<string> filters = [$"{Filter(nameof(filter.Tag), filter.Tag)}",
-									$"{Filter(nameof(filter.Character), filter.Character)}",
-									$"{Filter(nameof(filter.Author), filter.Author)}",
-									$"{Filter(nameof(filter.Rating), filter.Rating)}"];
-			int index = filters.Count;
+			List<string> filters = [];
+
+            foreach (var item in filter.Marker.Keys)
+				if (filter.Marker[item].Count > 0) 
+					filters.Add($"Join{item}.{item} IS NOT NULL");
+
+            int index = filters.Count;
 			while(index-- > 0)
 				if (filters[index].Length == 0) filters.Remove(filters[index]);
-			return filters.Count > 0 ? "WHERE " + string.Join(',', filters)
+			return filters.Count > 0 ? "WHERE " + string.Join(" OR\r\n", filters)
 									 : string.Empty;
 											
 		}
-		public static string Where<T>(string table, string marker, List<T> parameter)
+		public static string Where<T>(string table, string marker, IEnumerable<T> parameter)
 		{
 			ArgumentNullException.ThrowIfNull(parameter);
-			if (parameter.Count == 0) return string.Empty;
+			if (!parameter.Any()) return string.Empty;
 
 			return $"WHERE {table}By{marker}.{table}_Id = ALL(\r\n\t\t\t" +
 						$"SELECT {table}_Id \r\n\t\t\t" +

@@ -7,6 +7,7 @@ using System.Windows.Input;
 using ImageDB.SQL;
 using System.Windows.Data;
 using System.Runtime.Versioning;
+using System.Diagnostics;
 
 namespace ImageDB
 {
@@ -16,7 +17,7 @@ namespace ImageDB
     [SupportedOSPlatform("Windows")]
     public partial class DB : Window
     {
-        private List<Table.Image> TableList = [];
+        private List<Table.Image> TableList { get; } = [];
         private Table.Image CurrentItem { set; get; } = null;
         public DataBase dataBase = new("ImageLibrary", "Image");
         public readonly string[] join = ["Tag", "Character", "Author"];
@@ -34,8 +35,9 @@ namespace ImageDB
         private void DataInit()
         {            
             ImageData.ItemsSource = TableList;
-            dataBase.Load(ref TableList, join);
-            AddColumn();
+            TableList.AddRange(dataBase.Load<Table.Image>(join));
+            Debug.WriteLine("LOAD: " + TableList.Count);
+			AddColumn();
             if (TableList.Count > 0)
                 CurrentItem = TableList.First();
             ImageData.Items.Refresh();
@@ -58,9 +60,7 @@ namespace ImageDB
         private void FillTagButton()
         {
             DataBase tag = new("ImageLibrary", join.First());
-            List<Table.Marker> marker = [];
-
-            tag.Load(ref marker);
+            List<Table.Marker> marker = tag.Load<Table.Marker>().ToList();
 
             foreach (Table.Marker Tag in marker)
                 TagsGroup.Children.Add(new MarkerButton(Tag.Name, Tag.Id, join.First(), AddEvent, RemoveEvent));

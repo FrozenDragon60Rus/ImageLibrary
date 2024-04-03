@@ -3,11 +3,9 @@ using ImageDB.SQL;
 
 namespace ImageDBTest.SQL
 {
-    public class DataBaseTest : IDisposable
+    public class DataBaseTest(DataBase DB) : IDisposable
     {
-        DataBase DB;
-        public DataBaseTest() =>
-            DB = new DataBase("ImageLibrary", "Image");
+        private DataBase DB { get; } = DB;
 
         [Fact]
         public void IsConnectionTest() =>

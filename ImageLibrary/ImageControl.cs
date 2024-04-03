@@ -6,6 +6,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Input;
 using ImageLibrary.SQL;
+using System.Diagnostics;
+using System.Linq;
 
 namespace ImageLibrary
 {
@@ -87,31 +89,32 @@ namespace ImageLibrary
         }
         public void Load(int imageCount, int currentPage, Vector size, Filter filter)
         {
-            int offset = currentPage * 10,
-                count = offset + 10 > imageCount ? imageCount - offset
-                                                 : offset + 10; ;
+            int offset = currentPage * imageCount,
+                count = offset + imageCount > this.imageCount ? imageCount - offset
+                                                              : imageCount;
             var imageName = dataBase.Load(offset, count, filter);
-            for (int i = 0; i < imageName.Count; i++)
+            Debug.WriteLine("ImageCount: " + imageName.Count());
+            int index = 0;
+            foreach(var name in imageName)
             {
-                BitmapImage bi = new();
-                bi.BeginInit();
-                //Console.WriteLine(imageName[i]);
-                bi.UriSource = new Uri(imageName[i]);
-                try
-                {
-                    bi.EndInit();
-                }
-                catch
-                {
-                    Console.WriteLine("Image " + Path.GetFileName(imageName[i]) + " not found");
-                    bi = ToBitmapImage(Resource.no_foto);
-                }
-                Vector s = Resize(new Vector(bi.PixelWidth, bi.PixelHeight), size);
-                Images[i].Source = bi;
-                //Console.WriteLine("IX-" + s.X + " IY-" + s.Y);
-                Images[i].Width = s.X;
-                Images[i].Height = s.Y;
-            }
+				BitmapImage bi = new();
+				bi.BeginInit();
+				bi.UriSource = new Uri(name);
+				try
+				{
+					bi.EndInit();
+				}
+				catch
+				{
+					Console.WriteLine("Image " + Path.GetFileName(name) + " not found");
+					bi = ToBitmapImage(Resource.no_foto);
+				}
+				Vector s = Resize(new Vector(bi.PixelWidth, bi.PixelHeight), size);
+				Images[index].Source = bi;
+				//Console.WriteLine("IX-" + s.X + " IY-" + s.Y);
+				Images[index].Width = s.X;
+				Images[index++].Height = s.Y;
+			}
             if (imageCount < Images.Length)
                 for (int i = imageCount; i < Images.Length; i++)
                 {

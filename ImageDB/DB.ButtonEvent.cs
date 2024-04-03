@@ -1,6 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Xml.Linq;
 using ImageDB.SQL;
 
 namespace ImageDB
@@ -11,34 +19,63 @@ namespace ImageDB
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (dataBase.State == System.Data.ConnectionState.Open) return;
-
+			
             System.Windows.Forms.FolderBrowserDialog FBD = new();
-            if (FBD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                dataBase.FromFolder(ref TableList, FBD.SelectedPath, "Address", join);
-                XML.Info.Folder = FBD.SelectedPath;
-                dataBase.Load(ref TableList, join);
-            }
-            ImageData.Items.Refresh();
-        }
+
+			if (FBD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+			{
+				dataBase.Clear(join);
+				TableList.Clear();
+				var files = Directory.GetFiles(FBD.SelectedPath);
+                int index = 1;
+				foreach (var file in files)
+				{
+					TableList.Add(new Table.Image(index++, file, 0));
+					dataBase.Add(TableList.Last());
+				}
+				XML.Info.Folder = FBD.SelectedPath;
+			}
+			ImageData.Items.Refresh();
+
+		}
 
         private void Button_Refresh(object sender, RoutedEventArgs e)
         {
             if (dataBase.State == System.Data.ConnectionState.Open) return;
-            dataBase.Refresh(ref TableList, "Address");
-            ImageData.Items.Refresh();
+
+			if (XML.Info.Folder == string.Empty)
+			{
+				MessageBox.Show("База не была сформирована или отсутствуют данные о её формировании");
+				return;
+			}
+
+			IEnumerable<object> files = Directory.GetFiles(XML.Info.Folder);
+
+			string[] extensionList = ["jpg, png, jpeg, gif, bmp"];
+			var address = TableList.Select(t => t.Parameter["Address"]);
+            files = files.Except(address);
+
+            int index = TableList.Count + 1;
+			foreach (var file in files)
+			{
+				TableList.Add(new Table.Image(index++, file.ToString(), 0));
+				dataBase.Add(TableList.Last());
+			}
+			ImageData.Items.Refresh();
 
         }
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (CurrentItem == null) return;
+			if(dataBase.State == System.Data.ConnectionState.Open) return;
+			if (CurrentItem == null) return;
             TableList.Remove(CurrentItem);
             dataBase.Delete(CurrentItem);
             ImageData.Items.Refresh();
         }
         private void Button_Delete_KeyDown(object sender, KeyEventArgs e)
         {
-            if (CurrentItem == null) return;
+			if (dataBase.State == System.Data.ConnectionState.Open) return;
+			if (CurrentItem == null) return;
             int selectRow = TableList.IndexOf(CurrentItem);
 
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
@@ -51,12 +88,15 @@ namespace ImageDB
         }
         public void AddEvent(object sender, EventArgs e)
         {
-            var button = sender as MarkerButton;
+			if (dataBase.State == System.Data.ConnectionState.Open) return;
+			var button = sender as MarkerButton;
             DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
 
             marker.Add(CurrentItem.Id, button.Id, button.Marker);
 
             int index = TableList.IndexOf(CurrentItem);
+            if(index < 0) index = 0;
+
             TableList[index] = new(
                 dataBase.LoadById(CurrentItem.Id, join));
             CurrentItem = TableList[index];
@@ -65,7 +105,9 @@ namespace ImageDB
         }
         public void RemoveEvent(object sender, EventArgs e)
         {
-            var button = sender as MarkerButton;
+			if (dataBase.State == System.Data.ConnectionState.Open) return;
+
+			var button = sender as MarkerButton;
 
             DataBase marker = new("ImageLibrary", "ImageBy" + button.Marker);
 

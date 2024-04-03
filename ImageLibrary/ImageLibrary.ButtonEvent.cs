@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -23,7 +24,7 @@ namespace MyImageLibrary
 
 		private void RightPage_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
 		{
-			CurrentPage++;
+            CurrentPage++;
 			imageControl.Load(imageOnPage,
 							  CurrentPage,
 							  ImageSize,

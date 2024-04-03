@@ -52,7 +52,19 @@ namespace ImageDB.SQL
             SqlCommand command = new(commandText, Connection);
             Send(command);
         }
-        protected string[] ColumnName()
+		public void Clear(string[] join)
+		{
+			Clear();
+			string commandText;
+			SqlCommand command;
+			foreach (var item in join)
+			{
+				commandText = $"DELETE FROM {Table}BY{item}\r\n;";
+				command = new(commandText, Connection);
+				Send(command);
+			}
+		}
+		protected string[] ColumnName()
         {
             List<string> column = [];
             string commandText = $@"SELECT name FROM sys.dm_exec_describe_first_result_set('SELECT * FROM {Table}', NULL, 0) ;";

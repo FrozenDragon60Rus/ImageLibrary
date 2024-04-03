@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Data;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ImageLibrary.SQL
 {
@@ -31,9 +32,9 @@ namespace ImageLibrary.SQL
                  "Trusted_Connection=False; " +
                  "TrustServerCertificate=True; ");
 
-        public List<string> Load(int offset, int count)
+        public IEnumerable<string> Load(int offset, int count)
         {
-            List<string> list = [];
+			IEnumerable<string> list = [];
 
             connection.Open();
             string commandText = "SELECT [Address] " +
@@ -44,14 +45,15 @@ namespace ImageLibrary.SQL
             SqlCommand command = new(commandText, connection);
             using (var dataReader = command.ExecuteReader())
                 while (dataReader.Read())
-                    list.Add(dataReader["Address"].ToString());
+                    list = list.Append(dataReader["Address"].ToString());
 
             connection.Close();
             return list;
         }
-		public List<string> Load(int offset, int count, Filter filter)
+		public IEnumerable<string> Load(int offset, int count, Filter filter)
 		{
-			List<string> list = [];
+			IEnumerable<string> list = [];
+            if (count < 0) return list;
 
 			connection.Open();
             string commandText = string.Empty;
@@ -59,28 +61,28 @@ namespace ImageLibrary.SQL
             foreach (var key in filter.Marker.Keys)
 				commandText += Query.TemporaryTable(key, filter.Marker[key]);
 
-			commandText += "SELECT [Address] \r\n" +
-						 $"FROM {Table} \r\n" +
-						  Query.Join(Table, [..filter.Marker.Keys], filter) +
-                         $"WHERE JoinTag.Tag IS NOT NULL OR\r\n" +
-                         $"JoinCharacter.Character IS NOT NULL OR\r\n" +
-                         $"JoinAuthor.Author IS NOT NULL\r\n" +
+            commandText += "SELECT [Address] \r\n" +
+                         $"FROM {Table} \r\n" +
+                          Query.Join(Table, [.. filter.Marker.Keys], filter) +
+                          Query.Where(filter) +
                           "ORDER BY Rating DESC \r\n" +
-						 $"OFFSET {offset} ROWS FETCH NEXT {count} ROWS ONLY";
+                         $"OFFSET {offset} ROWS ";// +
+                         //$"FETCH NEXT {count} ROWS ONLY";
             Debug.WriteLine(commandText);
 
 			SqlCommand command = new(commandText, connection);
+            int index = 0;
 			using (var dataReader = command.ExecuteReader())
-				while (dataReader.Read())
-					list.Add(dataReader["Address"].ToString());
+				while (dataReader.Read() && index++ < count)
+					list = list.Append(dataReader["Address"].ToString());
 
 			connection.Close();
 			return list;
 		}
 
-		public List<string> Load(string type)
+		public IEnumerable<string> Load(string type)
         {
-            List<string> list = [];
+			IEnumerable<string> list = [];
 
             connection.Open();
             string commandText = $"SELECT [{type}] " +
@@ -90,24 +92,7 @@ namespace ImageLibrary.SQL
             SqlCommand command = new(commandText, connection);
             using (var dataReader = command.ExecuteReader())
                 while (dataReader.Read())
-                    list.Add(dataReader[type].ToString());
-
-            connection.Close();
-            return list;
-        }
-        public List<string> Load(Filter parameter)
-        {
-            List<string> list = [];
-
-            connection.Open();
-            string commandText = $"SELECT [Address] " +
-                                 $"FROM {Table} " +
-                                 $"ORDER BY Address";
-
-            SqlCommand command = new(commandText, connection);
-            /*using (SqlDataReader dataReader = command.ExecuteReader())
-                while (dataReader.Read())
-                    list.Add(dataReader[type].ToString());*/
+                    list = list.Append(dataReader[type].ToString());
 
             connection.Close();
             return list;

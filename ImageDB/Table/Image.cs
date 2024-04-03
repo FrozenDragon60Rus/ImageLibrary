@@ -17,8 +17,11 @@ namespace ImageDB.Table
             Parameter = new() {
                 { nameof(Id), Id },
                 { nameof(Address), Address },
-                { nameof(Rating), Rating }
-            };
+                { nameof(Rating), Rating },
+				{ "Tag", string.Empty },
+				{ "Character", string.Empty },
+				{ "Author", string.Empty }
+			};
         public Image(Dictionary<string, object> parameter) : base(parameter) { }
         public Image(string Address) : base() =>
             Parameter = new() {

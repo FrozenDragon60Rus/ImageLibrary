@@ -21,8 +21,11 @@ namespace ImageLibrary
 
             //Array.Sort(tag, StringComparer.InvariantCulture);
 
-            for (int i = 0; i < tag.Count; i++)
-                TagsGroup.Children.Add(Create(tag[i], i));
+            int index = 0;
+            foreach(var t in tag)
+				TagsGroup.Children.Add(Create(t, index++));
+			//for (int i = 0; i < tag.Count; i++)
+            //    TagsGroup.Children.Add(Create(tag[i], i));
         }
 
         private Button Create(string name, int num)

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Diagnostics;
 using ImageLibrary;
 
 namespace MyImageLibrary
@@ -14,9 +15,10 @@ namespace MyImageLibrary
     {
         private readonly short imageOnPage = 10,
                                imageRow = 2;
-        private readonly int MaxImage = 10;
+		private int page = 0,
+			        pageCount = 0;
 
-        ImageControl imageControl;
+		ImageControl imageControl;
         Filter filter = new();
         public Vector ImageSize
         {
@@ -34,13 +36,12 @@ namespace MyImageLibrary
             set {
                 if (value < 0)
                     page = 0;
-                else if ((value * imageOnPage) > imageControl.imageCount)
-                    return;
-                page = value;
-            }
+                else if (page > pageCount) page = pageCount;
+                else page = value;
+				Debug.WriteLine(CurrentPage);
+			}
             get => page;
         }
-        private int page = 0;
 
         public ImageLibrary()
         {
@@ -107,10 +108,10 @@ namespace MyImageLibrary
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             imageControl = new ImageControl(ref Viewer);
-            GroupSize();
+			pageCount = (int)Math.Ceiling((float)(imageControl.imageCount / imageOnPage));
+			GroupSize();
             FillImageGrid();
             new TagButton().Fill(TagsGroup, TagsBox.Width, ref filter);
-            Console.WriteLine(MaxImage);
         }
     }
 }
