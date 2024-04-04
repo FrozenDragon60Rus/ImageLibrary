@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Runtime.CompilerServices;
-using ImageDB.SQL;
+﻿using ImageDB.SQL;
 
 
 namespace ImageDBTest.SQL
