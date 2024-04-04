@@ -160,23 +160,6 @@ namespace ImageDB.SQL
         }
         #endregion
 
-        public void Refresh<T>(IEnumerable<T> table, string name) where T : IData, new()
-        {
-            IEnumerable<object> files = Directory.GetFiles(XML.Info.Folder);
-
-			string[] extensionList = ["jpg, png, jpeg, gif, bmp"];
-            var address = table.Select(t => t.Parameter["Address"]);
-            files = files.Except(address);
-
-			T data;
-            foreach (var file in files) {
-                data = new();
-                data.Parameter[name] = file;
-                table = table.Append(data);
-                Add(data);
-            }
-        }
-
 		public IEnumerable<T> Read<T>(string commandText, IEnumerable<string> columns) where T : IData, new()
 		{
 			IEnumerable<T> table = [];
