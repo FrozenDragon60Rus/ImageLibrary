@@ -23,31 +23,22 @@ namespace ImageDB.SQL
                 value[index++] = "@" + key;
             return string.Join(",", value);
         }
-        public static string AssignValueToColumn(IEnumerable<string> keys)
-        {
-            if (keys.Contains(string.Empty))
-                throw new Exception("Can't be empty");
-
-            string[] query = new string[keys.Count()];
-
-			int index = 0;
-			foreach (var key in keys)
-				query[index++] = $"{key}=@new{key}";
-
-            return string.Join(",", query);
-        }
         public static string Join(string Table, string[] join)
         {
             string commandText = string.Empty;
+            string crossTable;
             foreach (string tableName in join)
+            {
+                crossTable = $"{Table}By{tableName}";
                 commandText += "\r\nLEFT JOIN( \r\n" +
-                                   $"SELECT {Table}By{tableName}.{Table}_Id, STRING_AGG(CAST({tableName}.Name AS VARCHAR(1024)), ',') AS {tableName} \r\n" +
-                                   $"FROM {Table}By{tableName} \r\n" +
+                                   $"SELECT {crossTable}.{Table}_Id, STRING_AGG(CAST({tableName}.Name AS VARCHAR(1024)), ',') AS {tableName} \r\n" +
+                                   $"FROM {crossTable} \r\n" +
                                    $"LEFT JOIN {tableName} \r\n" +
-                                   $"ON {Table}By{tableName}.{tableName}_Id = {tableName}.Id \r\n" +
-                                   $"GROUP BY {Table}By{tableName}.{Table}_Id \r\n" +
+                                   $"ON {crossTable}.{tableName}_Id = {tableName}.Id \r\n" +
+                                   $"GROUP BY {crossTable}.{Table}_Id \r\n" +
                               $") AS Join{tableName} \r\n" +
                               $"ON {Table}.Id = Join{tableName}.{Table}_Id\r\n";
+            }
             return commandText;
         }
     }

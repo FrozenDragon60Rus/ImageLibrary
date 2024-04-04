@@ -18,28 +18,29 @@ namespace ImageLibrary.SQL
 			foreach (var item in parameter)
 				strParameter[index++] = $"('{item}')";
 
-			string commandText = $"IF OBJECT_ID('tempdb.dbo.#List{marker}', 'U') IS NOT NULL\r\n" +
-									 $"DROP TABLE #List{marker};\r\n" +
-								 $"CREATE TABLE #List{marker}\r\n" +
-								 $"({marker} VARCHAR(50));\r\n";
-			commandText += $"INSERT INTO #List{marker}\r\n" +
-						   $"VALUES {string.Join(',', strParameter)};\r\n\r\n";
-
-			return commandText;
+			return $"IF OBJECT_ID('tempdb.dbo.#List{marker}', 'U') IS NOT NULL " +
+						$"DROP TABLE #List{marker};" +
+				   $"CREATE TABLE #List{marker} " +
+				   $"({marker} VARCHAR(50));" +
+				   $"INSERT INTO #List{marker} " +
+				   $"VALUES {string.Join(',', strParameter)};";
 		}
-		public static string Join(string Table, IEnumerable<string> join, Filter filter)
+		public static string Join(string table, IEnumerable<string> join, Filter filter)
 		{
 			string commandText = string.Empty;
 			foreach (var marker in join)
-				commandText += "\r\nLEFT JOIN( \r\n" +
-								   $"SELECT {Table}By{marker}.{Table}_Id, STRING_AGG(CAST({marker}.Name AS VARCHAR(1024)), ',') AS {marker} \r\n" +
-								   $"FROM {Table}By{marker} \r\n" +
-								   $"LEFT JOIN {marker} \r\n" +
-								   $"ON {Table}By{marker}.{marker}_Id = {marker}.Id \r\n" +
-								   Where(Table, marker, filter.Marker[marker]) + 
-								   $"GROUP BY {Table}By{marker}.{Table}_Id \r\n" +
-							  $") AS Join{marker} \r\n" +
-							  $"ON {Table}.Id = Join{marker}.{Table}_Id\r\n";
+			{
+				string crossTable = $"{table}By{marker}";
+				commandText += "LEFT JOIN(" +
+								   $"SELECT {crossTable}.{table}_Id, STRING_AGG(CAST({marker}.Name AS VARCHAR(1024)), ',') AS {marker} " +
+								   $"FROM {crossTable} " +
+								   $"LEFT JOIN {marker} " +
+								   $"ON {crossTable}.{marker}_Id = {marker}.Id " +
+								   Where(table, marker, filter.Marker[marker]) +
+								   $"GROUP BY {crossTable}.{table}_Id " +
+							  $") AS Join{marker} " +
+							  $"ON {table}.Id = Join{marker}.{table}_Id ";
+			}
 			return commandText;
 		}
 		public static string Where(Filter filter)
@@ -48,12 +49,12 @@ namespace ImageLibrary.SQL
 
             foreach (var item in filter.Marker.Keys)
 				if (filter.Marker[item].Count > 0) 
-					filters.Add($"Join{item}.{item} IS NOT NULL");
+					filters.Add($"Join{item}.{item} IS NOT NULL ");
 
             int index = filters.Count;
 			while(index-- > 0)
 				if (filters[index].Length == 0) filters.Remove(filters[index]);
-			return filters.Count > 0 ? "WHERE " + string.Join(" OR\r\n", filters)
+			return filters.Count > 0 ? "WHERE " + string.Join(" OR ", filters)
 									 : string.Empty;
 											
 		}
@@ -62,16 +63,18 @@ namespace ImageLibrary.SQL
 			ArgumentNullException.ThrowIfNull(parameter);
 			if (!parameter.Any()) return string.Empty;
 
-			return $"WHERE {table}By{marker}.{table}_Id = ALL(\r\n\t\t\t" +
-						$"SELECT {table}_Id \r\n\t\t\t" +
-						$"FROM #List{marker}\r\n\t\t\t" +
-						 "LEFT JOIN (\r\n\t\t\t\t" +
-							$"SELECT {table}By{marker}.{table}_Id, {marker}.Name\r\n\t\t\t\t" +
-							$"FROM {table}By{marker}\r\n\t\t\t\t" +
-							$"LEFT JOIN {marker}\r\n\t\t\t\t" +
-							$"ON {table}By{marker}.{marker}_Id = {marker}.Id\r\n\t\t\t" +
-						 ") as List_Info\r\n\t\t\t" +
-						$"ON #List{marker}.{marker} = List_Info.Name)\r\n";
+			string crossTable = $"{table}By{marker}";
+
+			return $"WHERE {crossTable}.{table}_Id = ALL(" +
+						$"SELECT {table}_Id " +
+						$"FROM #List{marker} " +
+						 "LEFT JOIN (" +
+							$"SELECT {crossTable}.{table}_Id, {marker}.Name " +
+							$"FROM {crossTable} " +
+							$"LEFT JOIN {marker} " +
+							$"ON {crossTable}.{marker}_Id = {marker}.Id " +
+						 ") as List_Info " +
+						$"ON #List{marker}.{marker} = List_Info.Name) ";
 		}
 	}
 }

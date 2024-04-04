@@ -55,27 +55,6 @@ namespace ImageDBTest.SQL
 
             Assert.Equal("Can't be empty", e.Message);
         }
-        //<-------------------------------------ColumnWithValue test------------------------------------->
-
-        [Theory,
-            InlineData(new string[] { "first" }, 
-                       "first=@newfirst"),
-            InlineData(new string[] { "first", "second", "third" }, 
-                       "first=@newfirst,second=@newsecond,third=@newthird")]
-        public void AssignValueToColumnTest(string[] columns, string join) =>
-            Assert.Equal(join, Quary.AssignValueToColumn(columns));
-        [Theory,
-            InlineData(new object[] {
-                            new string[] { "" } }),
-            InlineData(new object[] {
-                            new string[] { "first", "", "third" } })]
-        public void AssignValueToColumnExceptionTest(string[] columns)
-        {
-            Exception e = Record.Exception(() => Quary.Column(columns));
-
-            Assert.Equal("Can't be empty", e.Message);
-        }
-
         //<-------------------------------------Join test------------------------------------->
         [Fact]
         public void JoinTest()

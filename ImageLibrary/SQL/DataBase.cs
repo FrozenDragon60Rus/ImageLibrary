@@ -40,7 +40,7 @@ namespace ImageLibrary.SQL
             string commandText = "SELECT [Address] " +
                                 $"FROM {Table} " +
                                  "ORDER BY Address " +
-                                $"OFFSET {offset} ROWS FETCH NEXT {count} ROWS ONLY";
+                                $"OFFSET {offset} ROWS FETCH NEXT {count} ROWS ONLY ";
 
             SqlCommand command = new(commandText, connection);
             using (var dataReader = command.ExecuteReader())
@@ -61,11 +61,11 @@ namespace ImageLibrary.SQL
             foreach (var key in filter.Marker.Keys)
 				commandText += Query.TemporaryTable(key, filter.Marker[key]);
 
-            commandText += "SELECT [Address] \r\n" +
-                         $"FROM {Table} \r\n" +
+            commandText += "SELECT [Address] " +
+                         $"FROM {Table} " +
                           Query.Join(Table, [.. filter.Marker.Keys], filter) +
                           Query.Where(filter) +
-                          "ORDER BY Rating DESC \r\n" +
+                          "ORDER BY Rating DESC " +
                          $"OFFSET {offset} ROWS ";// +
                          //$"FETCH NEXT {count} ROWS ONLY";
             Debug.WriteLine(commandText);
@@ -87,7 +87,7 @@ namespace ImageLibrary.SQL
             connection.Open();
             string commandText = $"SELECT [{type}] " +
                                  $"FROM {Table} " +
-                                 $"ORDER BY {type}";
+                                 $"ORDER BY {type} ";
 
             SqlCommand command = new(commandText, connection);
             using (var dataReader = command.ExecuteReader())
