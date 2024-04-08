@@ -17,7 +17,6 @@ namespace ImageDB.SQL
     {
         string Primary { get; }
         string[] Unique { get; }
-        
 
         public DataBase(string name, string table) : base(name, table)
         {

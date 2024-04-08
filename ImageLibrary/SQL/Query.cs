@@ -54,7 +54,7 @@ namespace ImageLibrary.SQL
             int index = filters.Count;
 			while(index-- > 0)
 				if (filters[index].Length == 0) filters.Remove(filters[index]);
-			return filters.Count > 0 ? "WHERE " + string.Join(" OR ", filters)
+			return filters.Count > 0 ? "AND " + string.Join(" OR ", filters)
 									 : string.Empty;
 											
 		}

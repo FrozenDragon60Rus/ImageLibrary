@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System;
 
 namespace ImageLibrary.SQL
 {
@@ -40,11 +41,12 @@ namespace ImageLibrary.SQL
             string commandText = "SELECT [Address] " +
                                 $"FROM {Table} " +
                                  "ORDER BY Address " +
-                                $"OFFSET {offset} ROWS FETCH NEXT {count} ROWS ONLY ";
+                                $"OFFSET {offset} ROWS";// FETCH NEXT {count} ROWS ONLY ";
 
+            int index = 0;
             SqlCommand command = new(commandText, connection);
             using (var dataReader = command.ExecuteReader())
-                while (dataReader.Read())
+                while (dataReader.Read() && index++ < count)
                     list = list.Append(dataReader["Address"].ToString());
 
             connection.Close();
@@ -64,6 +66,7 @@ namespace ImageLibrary.SQL
             commandText += "SELECT [Address] " +
                          $"FROM {Table} " +
                           Query.Join(Table, [.. filter.Marker.Keys], filter) +
+                         $"WHERE Rating BETWEEN {filter.Rating.First()} AND {filter.Rating.Last()} " +
                           Query.Where(filter) +
                           "ORDER BY Rating DESC " +
                          $"OFFSET {offset} ROWS ";// +
