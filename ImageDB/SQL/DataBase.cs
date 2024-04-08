@@ -8,6 +8,7 @@ using ImageDB.Table;
 using System.Data;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace ImageDB.SQL
 {
@@ -105,15 +106,7 @@ namespace ImageDB.SQL
         }
         public void Add(int imageId, int markerId, string marker)
         {
-            string commandText = $"MERGE INTO ImageBy{marker} \r\n" +
-                                 $"USING (SELECT {marker}_Id = {markerId}, Image_Id = {imageId}) as new \r\n" +
-                                 $"ON dbo.{Table}.Image_Id = new.Image_Id\r\n" +
-                                 $"AND dbo.{Table}.{marker}_Id = new.{marker}_Id\r\n" +
-                                  "WHEN MATCHED THEN\r\n" +
-                                  "DELETE\r\n" +
-                                  "WHEN NOT MATCHED THEN \r\n" +
-                                  "INSERT \r\n" +
-                                 $"VALUES ({imageId}, {markerId});";
+            string commandText = $@"EXEC [dbo].Add{marker} {imageId}, {markerId}";
 
             SqlCommand command = new(commandText, Connection);
             Send(command);
@@ -130,36 +123,29 @@ namespace ImageDB.SQL
 		}
 		public IEnumerable<T> Load<T>(string[] join) where T : IData, new()
 		{
-			string commandText = "SELECT ";
-			commandText += Quary.Column(columns);
-
-			foreach (string j in join)
-				commandText += $", Join{j}.{j}\r\n";
-			commandText += $"FROM {Table} \r\n";
-
-			commandText += Quary.Join(Table, join);
+            string commandText = "EXEC [dbo].GetImageList null;";
 
 			var allColumns = columns.Concat(join);
 			return Read<T>(commandText, allColumns);
 		}
         public Dictionary<string, object> LoadById(int Id, string[] join)
         {
-            string commandText = "SELECT ";
-            commandText += Quary.Column(columns);
-
-            foreach (string j in join)
-                commandText += $", Join{j}.{j}";
-            commandText += $"\r\nFROM {Table} \r\n";
-
-            commandText += Quary.Join(Table, join);
-            commandText += $"\r\nWHERE Id = {Id}";
+			string commandText = $@"EXEC dbo.GetImageList {Id};";
 
             var allColumns = columns.Concat(join);
 
             return Read<Data>(commandText, allColumns).First().Parameter;
         }
-        #endregion
+		#endregion
 
+		#region Update
+        public void Update<T>(T data) where T : Data
+        {
+            string commandText = $@"UPDATE {Table} SET Rating = {data.Parameter["Rating"]} WHERE Id = {data.Parameter["Id"]}";
+            Send(new(commandText, Connection));
+            Debug.WriteLine(commandText);
+        }
+		#endregion
 		public IEnumerable<T> Read<T>(string commandText, IEnumerable<string> columns) where T : IData, new()
 		{
 			IEnumerable<T> table = [];

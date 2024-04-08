@@ -36,26 +36,9 @@ namespace ImageDB
         {            
             ImageData.ItemsSource = TableList;
             TableList.AddRange(dataBase.Load<Table.Image>(join));
-            Debug.WriteLine("LOAD: " + TableList.Count);
-			AddColumn();
             if (TableList.Count > 0)
                 CurrentItem = TableList.First();
             ImageData.Items.Refresh();
-        }
-        private void AddColumn()
-        {
-            foreach(string name in dataBase.Columns.Concat(join))
-            {
-                var column = new DataGridTextColumn()
-                {
-                    Header = name,
-                    Binding = new Binding(name),
-                    IsReadOnly = true,
-                };
-                if (join.Contains(column.Header)) column.MaxWidth = 150;
-
-                ImageData.Columns.Add(column);
-            }
         }
         private void FillTagButton()
         {
@@ -82,6 +65,7 @@ namespace ImageDB
 
         private void ImageData_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
+            
             if(ImageData.CurrentCell.IsValid)
                 CurrentItem = ImageData.CurrentCell.Item as Table.Image;
         }
@@ -143,5 +127,10 @@ namespace ImageDB
                     return button.Id;
             return -1;
         }
-    }
+
+		private void ImageData_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+		{
+            
+		}
+	}
 }
