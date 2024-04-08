@@ -120,14 +120,14 @@ namespace ImageDB.SQL
 		}
 		public IEnumerable<T> Load<T>(string[] join) where T : IData, new()
 		{
-            string commandText = "SELECT * FROM [dbo].GetImageList();";
+            string commandText =   "SELECT * FROM [dbo].GetImageList();";
 
 			var allColumns = columns.Concat(join);
 			return Read<T>(commandText, allColumns);
 		}
         public Dictionary<string, object> LoadById(int Id, string[] join)
         {
-			string commandText = $@"SELECT * FROM dbo.GetImageList() WHERE Id={Id};";
+			string commandText = $@"SELECT * FROM [dbo].GetImageList() WHERE Id={Id};";
 
             var allColumns = columns.Concat(join);
 
