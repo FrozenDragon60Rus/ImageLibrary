@@ -15,8 +15,10 @@ namespace MyImageLibrary
     {
         private readonly short imageOnPage = 10,
                                imageRow = 2;
-		private int page = 0,
-			        pageCount = 0;
+        private int page = 0;
+	    private int pageCount {
+            get => (int)Math.Ceiling((float)(imageControl.imageCount / imageOnPage));
+		}
 
 		ImageControl imageControl;
         Filter filter = new();
@@ -108,7 +110,6 @@ namespace MyImageLibrary
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             imageControl = new ImageControl(ref Viewer);
-			pageCount = (int)Math.Ceiling((float)(imageControl.imageCount / imageOnPage));
 			GroupSize();
             FillImageGrid();
             new TagButton().Fill(TagsGroup, TagsBox.Width, ref filter);

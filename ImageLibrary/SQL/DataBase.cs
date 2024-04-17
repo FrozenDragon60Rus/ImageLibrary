@@ -58,26 +58,29 @@ namespace ImageLibrary.SQL
             if (count < 0) return list;
 
 			connection.Open();
-            string commandText = string.Empty;
-
-            foreach (var key in filter.Marker.Keys)
-				commandText += Query.TemporaryTable(key, filter.Marker[key]);
-
-            commandText += "SELECT [Address] " +
-                         $"FROM {Table} " +
-                          Query.Join(Table, [.. filter.Marker.Keys], filter) +
-                         $"WHERE Rating BETWEEN {filter.Rating.First()} AND {filter.Rating.Last()} " +
-                          Query.Where(filter) +
-                          "ORDER BY Rating DESC " +
-                         $"OFFSET {offset} ROWS ";// +
-                         //$"FETCH NEXT {count} ROWS ONLY";
-            Debug.WriteLine(commandText);
+            string commandText = "EXEC GetImageListWithFilter @Tag, @Character, @Author, @RatingFrom, @RaringTo, @Offset, @Count;";
 
 			SqlCommand command = new(commandText, connection);
-            int index = 0;
-			using (var dataReader = command.ExecuteReader())
-				while (dataReader.Read() && index++ < count)
-					list = list.Append(dataReader["Address"].ToString());
+
+            command.Parameters.AddWithValue("@Tag", 
+                                            filter.Tag.Count > 0 ? string.Join(',', filter.Tag) 
+                                                                 : DBNull.Value);
+			command.Parameters.AddWithValue("@Character", 
+                                            filter.Character.Count > 0 ? string.Join(',', filter.Character) 
+                                                                 : DBNull.Value);
+			command.Parameters.AddWithValue("@Author", 
+                                            filter.Author.Count > 0 ? string.Join(',', filter.Author) 
+                                                                 : DBNull.Value);
+            command.Parameters.AddWithValue("@RatingFrom", filter.Rating.First());
+			command.Parameters.AddWithValue("@RaringTo", filter.Rating.Last());
+			command.Parameters.AddWithValue("@Offset", offset);
+			command.Parameters.AddWithValue("@Count", count);
+
+            using (var dataReader = command.ExecuteReader())
+                while (dataReader.Read())
+                    list = list.Append(dataReader["Address"].ToString());
+                
+            
 
 			connection.Close();
 			return list;

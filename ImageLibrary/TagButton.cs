@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ImageLibrary
 {
@@ -59,7 +60,7 @@ namespace ImageLibrary
             if (b.Background == Brushes.White)
             {
 				filter.Tag.Add(item);
-                Debug.WriteLine(filter.Marker["Tag"].IndexOf(item));
+                Debug.WriteLine(filter.Tag.Last());
                 b.Background = Brushes.Gray;
             }
             else

@@ -89,14 +89,13 @@ namespace ImageLibrary
         }
         public void Load(int imageCount, int currentPage, Vector size, Filter filter)
         {
-            int offset = currentPage * imageCount,
-                count = offset + imageCount > this.imageCount ? imageCount - offset
-                                                              : imageCount;
-            var imageName = dataBase.Load(offset, count, filter);
+            int offset = currentPage * imageCount;
+            var imageName = dataBase.Load(offset, imageCount, filter);
             Debug.WriteLine("ImageCount: " + imageName.Count());
             int index = 0;
             foreach(var name in imageName)
             {
+                Debug.WriteLine(name);
 				BitmapImage bi = new();
 				bi.BeginInit();
 				bi.UriSource = new Uri(name);
@@ -113,14 +112,12 @@ namespace ImageLibrary
 				Images[index].Source = bi;
 				//Console.WriteLine("IX-" + s.X + " IY-" + s.Y);
 				Images[index].Width = s.X;
-				Images[index++].Height = s.Y;
+				Images[index].Height = s.Y;
+				Images[index++].Visibility = Visibility.Visible;
 			}
-            if (imageCount < Images.Length)
-                for (int i = imageCount; i < Images.Length; i++)
-                {
-                    Images[i].Width = 0;
-                    Images[i].Height = 0;
-                }
+            if (imageName.Count() < Images.Length)
+                for (int i = imageName.Count(); i < Images.Length; i++)
+                    Images[i].Visibility = Visibility.Hidden;
         }
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>")]
 		private BitmapImage ToBitmapImage(System.Drawing.Bitmap src)
