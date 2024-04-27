@@ -5,9 +5,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Input;
-using ImageLibrary.SQL;
-using System.Diagnostics;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ImageLibrary
 {
@@ -15,14 +14,8 @@ namespace ImageLibrary
     {
         public Image[] Images;
         private Grid Viewer { get; }
-        private readonly DataBase dataBase;
-        public readonly int imageCount; 
-        public ImageControl(ref Grid viewer)
-        {
+        public ImageControl(ref Grid viewer) =>
             Viewer = viewer;
-            dataBase = new DataBase("ImageLibrary", "Image");
-            imageCount = dataBase.GetRowCount();
-        }
         static public Vector Resize(Vector vector1, Vector vector2)
         {
             Vector vector = new();
@@ -87,15 +80,12 @@ namespace ImageLibrary
             Viewer.Children.Add(bg);
             Viewer.Children.Add(img);
         }
-        public void Load(int imageCount, int currentPage, Vector size, Filter filter)
+        public void Load(Vector size, IEnumerable<string> imageName)
         {
-            int offset = currentPage * imageCount;
-            var imageName = dataBase.Load(offset, imageCount, filter);
-            Debug.WriteLine("ImageCount: " + imageName.Count());
             int index = 0;
             foreach(var name in imageName)
             {
-                Debug.WriteLine(name);
+                //Debug.WriteLine(name);
 				BitmapImage bi = new();
 				bi.BeginInit();
 				bi.UriSource = new Uri(name);

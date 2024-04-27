@@ -58,7 +58,7 @@ namespace ImageLibrary.SQL
             if (count < 0) return list;
 
 			connection.Open();
-            string commandText = "EXEC GetImageListWithFilter @Tag, @Character, @Author, @RatingFrom, @RaringTo, @Offset, @Count;";
+            string commandText = "EXEC GetImageListWithFilter @Tag, @Character, @Author, @RatingFrom, @RaringTo";
 
 			SqlCommand command = new(commandText, connection);
 
@@ -67,20 +67,18 @@ namespace ImageLibrary.SQL
                                                                  : DBNull.Value);
 			command.Parameters.AddWithValue("@Character", 
                                             filter.Character.Count > 0 ? string.Join(',', filter.Character) 
-                                                                 : DBNull.Value);
+                                                                       : DBNull.Value);
 			command.Parameters.AddWithValue("@Author", 
                                             filter.Author.Count > 0 ? string.Join(',', filter.Author) 
-                                                                 : DBNull.Value);
+                                                                    : DBNull.Value);
             command.Parameters.AddWithValue("@RatingFrom", filter.Rating.First());
 			command.Parameters.AddWithValue("@RaringTo", filter.Rating.Last());
-			command.Parameters.AddWithValue("@Offset", offset);
-			command.Parameters.AddWithValue("@Count", count);
+			//command.Parameters.AddWithValue("@Offset", offset);
+			//command.Parameters.AddWithValue("@Count", count);
 
             using (var dataReader = command.ExecuteReader())
                 while (dataReader.Read())
                     list = list.Append(dataReader["Address"].ToString());
-                
-            
 
 			connection.Close();
 			return list;

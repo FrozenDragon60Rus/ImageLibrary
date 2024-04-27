@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
@@ -16,19 +16,21 @@ namespace MyImageLibrary
 		private void LeftPage_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
 		{
 			CurrentPage--;
-			imageControl.Load(imageOnPage,
-							  CurrentPage,
-							  ImageSize,
-							  filter);
+			int count = CurrentPage * imageOnPage < imageName.Count ? imageOnPage : imageName.Count;
+			imageControl.Load(
+				ImageSize,
+				imageName.GetRange(CurrentPage * imageOnPage, count)
+			);
 		}
 
 		private void RightPage_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
 		{
             CurrentPage++;
-			imageControl.Load(imageOnPage,
-							  CurrentPage,
-							  ImageSize,
-							  filter);
+			int count = CurrentPage * imageOnPage < imageName.Count ? imageOnPage : imageName.Count;
+			imageControl.Load(
+				ImageSize,
+				imageName.GetRange(CurrentPage * imageOnPage, count)
+			);
 		}
 
 
@@ -38,7 +40,11 @@ namespace MyImageLibrary
 			{
 				try
 				{
-					imageControl.Load(imageOnPage, CurrentPage, ImageSize, filter);
+					int count = CurrentPage * imageOnPage < imageName.Count ? imageOnPage : imageName.Count;
+					imageControl.Load(
+						ImageSize, 
+						imageName.GetRange(CurrentPage * imageOnPage, count)
+					);
 				}
 				catch (IOException)
 				{
@@ -62,7 +68,9 @@ namespace MyImageLibrary
 			try
 			{
 				CurrentPage = 0;
-				imageControl.Load(imageOnPage, CurrentPage, ImageSize, filter);
+				imageName = dataBase.Load(CurrentPage * imageOnPage, imageOnPage, filter).ToList();
+				int count = imageOnPage < imageName.Count ? imageOnPage : imageName.Count;
+				imageControl.Load(ImageSize, imageName.GetRange(CurrentPage, count));
 			}
 			catch (IOException)
 			{

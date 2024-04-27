@@ -3,8 +3,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Diagnostics;
+using System.Collections.Generic;
+using ImageLibrary.SQL;
 using ImageLibrary;
+using System.Diagnostics;
 
 namespace MyImageLibrary
 {
@@ -17,11 +19,13 @@ namespace MyImageLibrary
                                imageRow = 2;
         private int page = 0;
 	    private int pageCount {
-            get => (int)Math.Ceiling((float)(imageControl.imageCount / imageOnPage));
+            get => (int)Math.Ceiling((float)(imageName.Count / imageOnPage));
 		}
 
 		ImageControl imageControl;
         Filter filter = new();
+		private readonly DataBase dataBase;
+		List<string> imageName = [];
         public Vector ImageSize
         {
             get
@@ -36,18 +40,19 @@ namespace MyImageLibrary
         private int CurrentPage
         {
             set {
-                if (value < 0)
-                    page = 0;
-                else if (page > pageCount) page = pageCount;
+                if (value < 0) page = 0;
+                else if (value > pageCount) page = pageCount;
                 else page = value;
-				Debug.WriteLine(CurrentPage);
+                Debug.WriteLine("currentPage " + CurrentPage);
 			}
             get => page;
         }
 
         public ImageLibrary()
         {
-            InitializeComponent();
+			dataBase = new DataBase("ImageLibrary", "Image");
+
+			InitializeComponent();
         }
 
         private void FillImageGrid()
@@ -101,7 +106,6 @@ namespace MyImageLibrary
         {
             BorderGroup.Height = TagsBox.Height = Height - 100;
             BorderGroup.Width = TagsBox.Width = Width - 26;
-            //Console.WriteLine("width(" + Width + ") height(" + Height + ")");
             FindImage.Width = ShowTags.Width = Width - 150;
             Viewer.Width = Main.Width;
             Viewer.Height = Main.Height;
@@ -109,7 +113,7 @@ namespace MyImageLibrary
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            imageControl = new ImageControl(ref Viewer);
+			imageControl = new ImageControl(ref Viewer);
 			GroupSize();
             FillImageGrid();
             new TagButton().Fill(TagsGroup, TagsBox.Width, ref filter);
