@@ -46,29 +46,30 @@ END;
 
 GO*/
 
-CREATE OR ALTER FUNCTION GetImageList()
-RETURNS TABLE
-AS
-RETURN
-	SELECT [dbo].[Image].Id, 
-		 [dbo].[Image].Address,
-		 [dbo].[Image].Rating,
-		 JoinTag.Tag,
-		 JoinCharacter.Character,
-		 JoinAuthor.Author
-	FROM [dbo].[Image]
+create or alter function GetImageList()
+returns table
+as
+return
+	select 
+		i.Id, 
+		i.Address,
+		i.Rating,
+		JoinTag.Tag,
+		JoinCharacter.Character,
+		JoinAuthor.Author
+	from [dbo].[Image] as i
 
-	LEFT JOIN (
-		SELECT [dbo].[ImageByTag].Image_Id, STRING_AGG(CAST(Tag.Name AS VARCHAR(1024)),',') AS Tag
-		FROM [dbo].[ImageByTag]
+	left join (
+		SELECT ibt.Image_Id, STRING_AGG(CAST(t.Name AS VARCHAR),',') AS Tag
+		FROM [dbo].[ImageByTag] as ibt
 
-		LEFT JOIN [dbo].[Tag]
-		ON [dbo].[ImageByTag].Tag_Id = [dbo].[Tag].Id
-		GROUP BY [dbo].[ImageByTag].Image_Id
+		LEFT JOIN [dbo].[Tag] as t
+		ON t.Id = ibt.Tag_Id
+		group by ibt.Image_Id
 	) AS JoinTag
-	ON [dbo].[Image].Id = JoinTag.Image_Id
+	ON JoinTag.Image_Id = i.Id
 
-	LEFT JOIN (
+	left join (
 		SELECT [dbo].[ImageByCharacter].Image_Id, STRING_AGG(CAST(Character.Name AS VARCHAR(1024)),',') AS Character
 		FROM [dbo].[ImageByCharacter]
 
@@ -76,9 +77,9 @@ RETURN
 		ON [dbo].[ImageByCharacter].Character_Id = Character.Id
 		GROUP BY [dbo].[ImageByCharacter].Image_Id
 	) AS JoinCharacter
-	ON [dbo].[Image].Id = JoinCharacter.Image_Id
+	ON JoinCharacter.Image_Id = i.Id
 
-	LEFT JOIN (
+	left join (
 		SELECT [dbo].[ImageByAuthor].Image_Id, STRING_AGG(CAST(Author.Name AS VARCHAR(1024)),',') AS Author
 		FROM [dbo].[ImageByAuthor]
 
@@ -86,4 +87,4 @@ RETURN
 		ON [dbo].[ImageByAuthor].Author_Id = [dbo].[Author].Id
 		GROUP BY [dbo].[ImageByAuthor].Image_Id
 	) AS JoinAuthor
-	ON [dbo].[Image].Id = JoinAuthor.Image_Id
+	ON JoinAuthor.Image_Id = i.Id

@@ -1,46 +1,47 @@
 USE ImageLibrary
 GO
 
-CREATE OR ALTER PROCEDURE AddTag(@imageId INT, @tagId INT)
-AS
-BEGIN
-	MERGE INTO [ImageByTag]
-	USING (SELECT Tag_Id = @tagId, Image_Id = @imageId) as new
-	ON [dbo].[ImageByTag].Image_Id = new.Image_Id
-	AND [dbo].[ImageByTag].Tag_Id = new.Tag_Id
-	WHEN MATCHED THEN
-		DELETE
-	WHEN NOT MATCHED THEN
-		INSERT
-		VALUES (@imageId, @tagId);
-END;
-GO
+create or alter procedure AddTag(@imageId INT, @tagId INT)
+as
+begin
+	merge into [ImageByTag] as ibt
+	using (select Tag_Id = @tagId, Image_Id = @imageId) as new
+	on ibt.Image_Id = new.Image_Id
+		and ibt.Tag_Id = new.Tag_Id
+	when matched then
+		delete
+	when not matched then
+		insert
+		values (@imageId, @tagId);
+end;
 
-CREATE OR ALTER PROCEDURE AddCharacter(@imageId INT, @characterId INT)
-AS
-BEGIN
-	MERGE INTO [ImageByCharacter]
-	USING (SELECT Tag_Id = @characterId, Image_Id = @imageId) as new
-	ON [dbo].[ImageByCharacter].Image_Id = new.Image_Id
-	AND [dbo].[ImageByCharacter].Character_Id = new.Tag_Id
-	WHEN MATCHED THEN
-		DELETE
-	WHEN NOT MATCHED THEN
-		INSERT
-		VALUES (@imageId, @characterId);
-END;
-GO
+go
 
-CREATE OR ALTER PROCEDURE AddAuthor(@imageId INT, @authorId INT)
-AS
-BEGIN
-	MERGE INTO [ImageByAuthor]
-	USING (SELECT Tag_Id = @authorId, Image_Id = @imageId) as new
-	ON [dbo].[ImageByAuthor].Image_Id = new.Image_Id
-	AND [dbo].[ImageByAuthor].Author_Id = new.Tag_Id
-	WHEN MATCHED THEN
-		DELETE
-	WHEN NOT MATCHED THEN
-		INSERT
-		VALUES (@imageId, @authorId);
-END;
+create or alter procedure AddCharacter(@imageId INT, @characterId INT)
+as
+begin
+	merge into [ImageByCharacter] as ibc
+	using (select Tag_Id = @characterId, Image_Id = @imageId) as new
+	on ibc.Image_Id = new.Image_Id
+		and ibc.Character_Id = new.Tag_Id
+	when matched then
+		delete
+	when not matched then
+		insert
+		values (@imageId, @characterId);
+end;
+go
+
+create or alter procedure AddAuthor(@imageId INT, @authorId INT)
+as
+begin
+	merge into [ImageByAuthor] as iba
+	using (select Tag_Id = @authorId, Image_Id = @imageId) as new
+	on iba.Image_Id = new.Image_Id
+		and iba.Author_Id = new.Tag_Id
+	when matched then
+		delete
+	when not matched then
+		insert
+		values (@imageId, @authorId);
+end;

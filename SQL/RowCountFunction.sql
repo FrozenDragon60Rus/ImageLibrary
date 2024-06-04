@@ -6,12 +6,13 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE OR ALTER FUNCTION [dbo].[MyRowCount]()
-	RETURNS INT
-AS
-BEGIN
-	DECLARE @count INT = 0;
-	SELECT @count += 1
-	FROM dbo.Image
-	RETURN (@count)
-END;
+create or alter function dbo.MyRowCount()
+	returns int
+as
+begin
+	declare @Count int = 0;
+
+	select @Count += 1
+	from dbo.Image
+	return (@Count)
+end;

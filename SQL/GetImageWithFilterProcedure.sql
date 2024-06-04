@@ -1,120 +1,120 @@
 USE ImageLibrary
 GO
 
-IF TYPE_ID('VCHAR') IS NULL
-	CREATE TYPE VCHAR FROM VARCHAR(1024);
-GO
+if type_id('vchar') is null
+	create type vchar from varchar(1024);
+go
 
-CREATE OR ALTER PROC GetImageListWithFilter(
-	@Tag VCHAR, 
-	@Character VCHAR,
-	@Author VCHAR,
-	@RatingFrom INT,
-	@RatingTo INT,
-	@Offset INT,
-	@Count INT
+create or alter procedure GetImageListWithFilter(
+	@Tag vchar 
+	,@Character vchar
+	,@Author vchar
+	,@RatingFrom int
+	,@RatingTo int
+	--,@Offset int
+	--,@Fetch int
+	--,@Count int output
 )
-AS
-BEGIN
+as
+begin
+	set nocount on
 
-	IF OBJECT_ID('tempdb..#ListTag') IS NOT NULL
-			DROP TABLE dbo.#ListTag;
-		CREATE TABLE dbo.#ListTag(value VARCHAR(50));
+	if object_id('tempdb..#ListTag') is not null
+		drop table dbo.#ListTag;
 
-	IF @Tag IS NOT NULL
-	BEGIN
-		
-		INSERT INTO #ListTag
-		SELECT *
-		FROM STRING_SPLIT(@Tag,',');
+	create table dbo.#ListTag(value varchar(50));
 
-		DECLARE @TagCount INT;
-		SET @TagCount = (SELECT COUNT(#ListTag.value) FROM #ListTag)
-	END;
+	if @Tag is not null
+	begin
+		insert into #ListTag
+		select t.value
+		from string_split(@Tag,',') as t;
 
-	IF OBJECT_ID('tempdb..#ListCharacter') IS NOT NULL
-			DROP TABLE dbo.#ListCharacter;
-		CREATE TABLE dbo.#ListCharacter(value VARCHAR(50));
+		declare @TagCount int = @@rowcount;
+	end;
 
-	IF @Character IS NOT NULL
-	BEGIN
-		INSERT INTO #ListCharacter
-		SELECT *
-		FROM STRING_SPLIT(@Character,',');
+	if object_id('tempdb..#ListCharacter') is not null
+		drop table dbo.#ListCharacter;
 
-		DECLARE @CharacterCount INT;
-		SET @CharacterCount = (SELECT COUNT(#ListCharacter.value) FROM #ListCharacter)
-	END;
+	create table dbo.#ListCharacter(value varchar(50));
 
-	IF OBJECT_ID('tempdb..#ListAuthor') IS NOT NULL
-			DROP TABLE #ListAuthor;
-		CREATE TABLE #ListAuthor(value VARCHAR(50));
+	if @Character is not null
+	begin
+		insert into #ListCharacter
+		select c.value
+		from string_split(@Character,',') as c;
 
-	IF @Author IS NOT NULL
-	BEGIN
+		declare @CharacterCount int = @@rowcount;
+	end;
 
-		INSERT INTO #ListAuthor
-		SELECT *
-		FROM STRING_SPLIT(@Author,',');
+	if object_id('tempdb..#ListAuthor') is not null
+		drop table #ListAuthor;
 
-		DECLARE @AuthorCount INT;
-		SET @AuthorCount = (SELECT COUNT(#ListAuthor.value) FROM #ListAuthor)
-	END;
+	create table #ListAuthor(value varchar(50));
 
-	SELECT [Address]
-	FROM Image
-	LEFT JOIN(
-		SELECT ImageByTag.Image_Id, COUNT(#ListTag.value) AS Tag_Count
-		FROM ImageByTag
-		LEFT JOIN Tag
-		RIGHT JOIN #ListTag
-		ON Tag.Name = #ListTag.value
-		ON Tag.Id = ImageByTag.Tag_Id
-		GROUP BY ImageByTag.Image_Id
-		HAVING COUNT(#ListTag.value) = @TagCount
-	) AS JoinTag 
-	ON Image.Id = JoinTag.Image_Id
-	LEFT JOIN(
-		SELECT ImageByCharacter.Image_Id, COUNT(#ListCharacter.value) AS Character_Count
-		FROM ImageByCharacter
-		LEFT JOIN Character
-		RIGHT JOIN #ListCharacter
-		ON Character.Name = #ListCharacter.value
-		ON Character.Id = ImageByCharacter.Character_Id
-		GROUP BY ImageByCharacter.Image_Id
-		HAVING COUNT(#ListCharacter.value) = @CharacterCount
-	) AS JoinCharacter 
-	ON Image.Id = JoinCharacter.Image_Id 
-	LEFT JOIN(
-		SELECT ImageByAuthor.Image_Id, COUNT(#ListAuthor.value) AS Author_Count
-		FROM ImageByAuthor
-		LEFT JOIN Author
-		RIGHT JOIN #ListAuthor
-		ON Author.Name = #ListAuthor.value
-		ON Author.Id = ImageByAuthor.Author_Id
-		GROUP BY ImageByAuthor.Image_Id
-		HAVING COUNT(#ListAuthor.value) = @AuthorCount
-	) AS JoinAuthor 
-	ON Image.Id = JoinAuthor.Image_Id 
-	WHERE Rating BETWEEN @RatingFrom AND @RatingTo
-		AND dbo.OnMarker(@Tag, JoinTag.Tag_Count, @TagCount) = 1
-		AND dbo.OnMarker(@Character, JoinCharacter.Character_Count, @CharacterCount) = 1
-		AND dbo.OnMarker(@Author, JoinAuthor.Author_Count, @AuthorCount) = 1
-	ORDER BY Rating DESC 
-	OFFSET @Offset ROWS FETCH NEXT @Count ROWS ONLY
-END;
-GO
+	if @Author is not null
+	begin
+		insert into #ListAuthor
+		select a.value
+		from string_split(@Author,',') as a;
 
-CREATE OR ALTER FUNCTION OnMarker(@marker VCHAR, @count INT, @markerCount INT)
-RETURNS BIT
-AS
-BEGIN
-	IF @marker IS NULL RETURN 1;
-	IF @count = @markerCount RETURN 1
-	RETURN 0;
-END;
+		declare @AuthorCount int = @@rowcount;
+	end;
 
-GO
-EXEC GetImageListWithFilter 'android,angel', NULL, NULL, 0, 10, 0, 10;
-EXEC GetImageListWithFilter NULL, NULL, NULL, 0, 10, 0, 10;
-EXEC GetImageListWithFilter 'android,angel', NULL, NULL, 0, 10, 0, 10;
+	select i.Address
+	from dbo.Image as i
+		left join(
+			select 
+				ibt.Image_Id 
+				,count(lt.value) as TagCount
+			from dbo.ImageByTag as ibt
+				left join dbo.Tag as t on t.Id = ibt.Tag_Id
+				right join #ListTag as lt on lt.value = t.Name
+			group by ibt.Image_Id
+			having count(lt.value) = @TagCount
+		) as t on t.Image_Id = i.Id
+		left join(
+			select 
+				ibc.Image_Id 
+				,count(lc.value) AS CharacterCount
+			from dbo.ImageByCharacter as ibc
+				left join dbo.Character as c on c.Id = ibc.Character_Id
+				right join #ListCharacter as lc on lc.value = c.Name
+			group by ibc.Image_Id
+			having count(lc.value) = @CharacterCount
+		) as c on c.Image_Id = i.Id 
+		left join(
+			select 
+				iba.Image_Id 
+				,count(la.value) as AuthorCount
+			from dbo.ImageByAuthor as iba
+				left join dbo.Author as a on a.Id = iba.Author_Id
+				right join #ListAuthor as la on la.value = a.Name
+			group by iba.Image_Id
+			having count(la.value) = @AuthorCount
+		) as a on a.Image_Id = i.Id 
+	where i.Rating between @RatingFrom and @RatingTo
+		and dbo.FlagMarker(@Tag, t.TagCount, @TagCount) = 1
+		and dbo.FlagMarker(@Character, c.CharacterCount, @CharacterCount) = 1
+		and dbo.FlagMarker(@Author, a.AuthorCount, @AuthorCount) = 1
+	order by Rating desc;
+    --offset @Offset rows fetch next @Fetch rows only;
+
+	set nocount off
+end
+
+go
+
+create or alter function FlagMarker(@marker vchar, @count int, @markerCount int)
+returns bit
+as
+begin
+	if @marker is null return 1;
+	if @count = @markerCount return 1
+	return 0;
+end
+
+go
+
+exec GetImageListWithFilter 'android,angel', NULL, NULL, 0, 10
+exec GetImageListWithFilter NULL, NULL, NULL, 0, 10
