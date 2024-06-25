@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks.Dataflow;
 using System.Runtime.CompilerServices;
+using System.CodeDom.Compiler;
 
 namespace ImageDB.SQL
 {
@@ -34,15 +35,9 @@ namespace ImageDB.SQL
             List<string> key = [];
             try
             {
-                Connection.Open();
-                string coomandText = "SELECT Col.Column_Name from \r\n" +
-                                        "INFORMATION_SCHEMA.TABLE_CONSTRAINTS Tab, \r\n" +
-                                        "INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE Col \r\n" +
-                                     "WHERE \r\n" +
-                                        "Col.Constraint_Name = Tab.Constraint_Name \r\n" +
-                                        "AND Col.Table_Name = Tab.Table_Name \r\n" +
-                                       $"AND Tab.Constraint_Type = '{keyName}' \r\n" +
-                                       $"AND Col.Table_Name = '{Table}'\r\n";
+				Connection.Open();
+
+                string coomandText = $"execute GetKeyColumnName '{Table}'";
 
                 SqlCommand command = new(coomandText, Connection);
                 using var dataReader = command.ExecuteReader();
@@ -87,8 +82,6 @@ namespace ImageDB.SQL
             if (!table.Any()) return;
             Clear();
 
-            Image = (table as IEnumerable<Image>).ToList();
-
             string commandTextHeader = $"INSERT INTO {Table} ",
                        commandText,
                        column,
@@ -103,7 +96,9 @@ namespace ImageDB.SQL
 
             foreach (var data in table)
             {
-                commandText = $"({value}) ";
+				Image.Add(data as Image);
+
+				commandText = $"({value}) ";
                 SqlCommand command = new(commandTextHeader + commandText, Connection);
 
                 foreach (string key in keys)
@@ -140,12 +135,14 @@ namespace ImageDB.SQL
         }
 		#endregion
 
-        public Image Update(Image data)
+		#region Update
+		public Image Update(Image data)
         {
             int index = Image.IndexOf(data);
             Image[index] = new(Get<Image>(data.Id));
             return Image[index];
         }
+		#endregion
 
 		#region Delete
 		public void Delete(int imageId)
@@ -154,7 +151,10 @@ namespace ImageDB.SQL
                                 $"FROM {Table} \r\n" +
                                 $"WHERE Image_Id = {imageId}";
 
-            SqlCommand command = new(commandText, Connection);
+            var image = Image.Find(i => i.Id == imageId);
+			Image.Remove(image);
+
+			SqlCommand command = new(commandText, Connection);
             Send(command);
         }
         
@@ -169,7 +169,7 @@ namespace ImageDB.SQL
             SqlCommand command = new(commandText, Connection);
             Send(command);
         }
-        public void Delete<T>(List<T> data) where T : IData
+        public void Delete<T>(IEnumerable<T> data) where T : IData
         {
             foreach (var _data in data)
             {
@@ -177,7 +177,7 @@ namespace ImageDB.SQL
                                     $"FROM {Table} \r\n" +
                                     $"WHERE Id = {_data.Parameter["Id"]}";
 
-				Image.Remove(data as Image);
+				Image.Remove(_data as Image);
 
 				SqlCommand command = new(commandText, Connection);
                 Send(command);
