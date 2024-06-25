@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ImageDB.SQL;
-using System.Windows.Data;
 using System.Runtime.Versioning;
 using System.Diagnostics;
 
@@ -17,9 +16,9 @@ namespace ImageDB
     [SupportedOSPlatform("Windows")]
     public partial class DB : Window
     {
-        private List<Table.Image> TableList { get; } = [];
+        //private List<Table.Image> TableList { get; } = [];
         private Table.Image CurrentItem { set; get; } = null;
-        public DataBase dataBase = new("ImageLibrary", "Image");
+        public ImageDataBase dataBase;
         public readonly string[] join = ["Tag", "Character", "Author"];
         private string buffer = string.Empty;
 
@@ -33,17 +32,20 @@ namespace ImageDB
         }
 
         private void DataInit()
-        {            
-            ImageData.ItemsSource = TableList;
-            TableList.AddRange(dataBase.Load<Table.Image>(join));
-            if (TableList.Count > 0)
-                CurrentItem = TableList.First();
+        {
+            dataBase = new("ImageLibrary", "Image", join);
+
+			ImageData.ItemsSource = dataBase.Image;
+
+            if (dataBase.Image.Count > 0)
+                CurrentItem = dataBase.Image.First();
+
             ImageData.Items.Refresh();
         }
         private void FillTagButton()
         {
-            DataBase tag = new("ImageLibrary", join.First());
-            List<Table.Marker> marker = tag.Load<Table.Marker>().ToList();
+            MarkerDataBase tag = new("ImageLibrary", join.First());
+            List<Table.Marker> marker = tag.Get<Table.Marker>().ToList();
 
             foreach (Table.Marker Tag in marker)
                 TagsGroup.Children.Add(new MarkerButton(Tag.Name, Tag.Id, join.First(), AddEvent, RemoveEvent));
@@ -73,29 +75,31 @@ namespace ImageDB
         private void ImageData_KeyUp(object sender, KeyEventArgs e)
         {
             string marker = ImageData.CurrentCell.Column.Header.ToString();
-            var ImageBy = new DataBase("ImageLibrary", "ImageBy" + marker);
+            var ImageBy = new MarkerDataBase("ImageLibrary", "ImageBy" + marker);
 
             if (!join.Contains(marker)) return;
 
             switch (e.Key)
             {
                 case Key.Delete:
-                    ImageBy.Delete(CurrentItem.Id);
+                    dataBase.Delete(CurrentItem.Id);
                     CurrentItem.Parameter[marker] = string.Empty;
                     break;
                 case Key.Back:
                     if (CurrentItem.Parameter[marker]
                                    .ToString() == string.Empty)
                         return;
+
                     string name = CurrentItem.Parameter[marker]
                                                 .ToString()
                                                 .Split(',')
                                                 .Last();
+
                     int markerId = GetButtonId(name);
                     ImageBy.Delete(CurrentItem.Id, markerId);
 
                     CurrentItem = new(
-                        dataBase.LoadById(CurrentItem.Id, join));
+                        dataBase.Get<Table.Image>(CurrentItem.Id));
                     break;
                 case Key.C:
                     if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)

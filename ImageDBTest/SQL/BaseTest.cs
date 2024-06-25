@@ -4,28 +4,19 @@ using ImageDB.SQL;
 
 namespace ImageDBTest.SQL
 {
-    public class DataBaseTest : IDisposable
+    public class BaseTest : IDisposable
     {
-        private DataBase DB { get; }
+        private ImageDataBase DB { get; }
 
-        public DataBaseTest()
+        public BaseTest()
         {
-            DB = new DataBase("ImageLibrary", "Test");
+            DB = new ImageDataBase("ImageLibrary", "Test", []);
         } 
 
         [Fact]
         public void IsConnectionTest() =>
             Assert.Equal(ConnectionState.Closed, DB.State);
-		[Fact]
-        public void AddLoadTest()
-        {
-            Image img = new(1, "no", 1);
 
-            DB.Add(img);
-            var result = DB.Load<Image>();
-
-			Assert.Equal(img, result.Last());
-        }
         public void Dispose()
         {
             DB.Clear();

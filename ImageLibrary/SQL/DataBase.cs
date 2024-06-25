@@ -33,7 +33,7 @@ namespace ImageLibrary.SQL
                  "Trusted_Connection=False; " +
                  "TrustServerCertificate=True; ");
 
-        public IEnumerable<string> Load(int offset, int count)
+        public IEnumerable<string> Get(int offset, int count)
         {
 			IEnumerable<string> list = [];
 
@@ -52,13 +52,13 @@ namespace ImageLibrary.SQL
             connection.Close();
             return list;
         }
-		public IEnumerable<string> Load(int offset, int count, Filter filter)
+		public IEnumerable<string> Get(int offset, int count, Filter filter)
 		{
 			IEnumerable<string> list = [];
             if (count < 0) return list;
 
 			connection.Open();
-            string commandText = "EXEC GetImageListWithFilter @Tag, @Character, @Author, @RatingFrom, @RaringTo";
+            string commandText = "EXEC GetImageListWithFilter @Tag, @Character, @Author, @RatingFrom, @RaringTo, @Offset, @Fetch, @Count";
 
 			SqlCommand command = new(commandText, connection);
 
@@ -73,8 +73,14 @@ namespace ImageLibrary.SQL
                                                                     : DBNull.Value);
             command.Parameters.AddWithValue("@RatingFrom", filter.Rating.First());
 			command.Parameters.AddWithValue("@RaringTo", filter.Rating.Last());
-			//command.Parameters.AddWithValue("@Offset", offset);
-			//command.Parameters.AddWithValue("@Count", count);
+			command.Parameters.AddWithValue("@Offset", offset);
+			command.Parameters.AddWithValue("@Fetch", count);
+            command.Parameters.Add(
+                new SqlParameter(
+                    "@Count",
+                    DbType.Int32
+                ).Direction = ParameterDirection.Output
+            );
 
             using (var dataReader = command.ExecuteReader())
                 while (dataReader.Read())
@@ -84,7 +90,7 @@ namespace ImageLibrary.SQL
 			return list;
 		}
 
-		public IEnumerable<string> Load(string type)
+		public IEnumerable<string> Get(string type)
         {
 			IEnumerable<string> list = [];
 

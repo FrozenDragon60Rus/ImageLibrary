@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System;
 using System.Linq;
-using System.Diagnostics;
 
 namespace ImageDB.Table
 {
@@ -24,9 +23,9 @@ namespace ImageDB.Table
         public Data(Dictionary<string, object> parameter) =>
             Parameter = parameter;
         public Data() => Parameter = [];
-        public static bool operator ==(Data left, Data right) =>
+        public static bool operator == (Data left, Data right) =>
             right is not null && left.Parameter == right.Parameter;
-        public static bool operator !=(Data left, Data right) =>
+        public static bool operator != (Data left, Data right) =>
 			right is not null && left.Parameter != right.Parameter;
         public override bool Equals(object obj) =>
             obj.GetType() == GetType() &&

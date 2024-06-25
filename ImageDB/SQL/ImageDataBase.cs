@@ -5,24 +5,31 @@ using System.Data.SqlClient;
 using System.Windows;
 using ImageDB.Table;
 using System.Data;
-using System.Runtime.Versioning;
 using System.Diagnostics;
+using System.Windows.Forms;
+using System.Threading.Tasks.Dataflow;
+using System.Runtime.CompilerServices;
 
 namespace ImageDB.SQL
 {
-    [SupportedOSPlatform("Windows")]
-    public class DataBase : Base
-    {
+    public class ImageDataBase : Base
+	{
+        public List<Image> Image { get; protected set; }
+
         string Primary { get; }
         string[] Unique { get; }
+        private readonly string[] join;
 
-        public DataBase(string name, string table) : base(name, table)
+        public ImageDataBase(string name, string table, string[] join) : base(name, table)
         {
-            Primary = GetByKeyName("PRIMARY KEY").First();
-            Unique = GetByKeyName("UNIQUE");
+            Primary = GetKeyColumnName("PRIMARY KEY").First();
+            Unique = GetKeyColumnName("UNIQUE");
+
+            this.join = join;
+            Image = Get<Image>().ToList();
         }
 
-        public string[] GetByKeyName(string keyName)
+        public string[] GetKeyColumnName(string keyName)
         {
             List<string> key = [];
             try
@@ -44,7 +51,7 @@ namespace ImageDB.SQL
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             finally { Connection.Close(); }
 
@@ -55,7 +62,9 @@ namespace ImageDB.SQL
         #region Add
         public void Add<T>(T table) where T : IData, new()
         {
-            string commandText = $"INSERT INTO {Table} ";
+            Image.Add(table as Image);
+
+			string commandText = $"INSERT INTO {Table} ";
 
             var keys = columns.Where(k => k != Primary);
             string column = Quary.Column(keys),
@@ -78,6 +87,8 @@ namespace ImageDB.SQL
             if (!table.Any()) return;
             Clear();
 
+            Image = (table as IEnumerable<Image>).ToList();
+
             string commandTextHeader = $"INSERT INTO {Table} ",
                        commandText,
                        column,
@@ -90,7 +101,7 @@ namespace ImageDB.SQL
             commandTextHeader += $"({column}) VALUES ";
 
 
-            foreach (T data in table)
+            foreach (var data in table)
             {
                 commandText = $"({value}) ";
                 SqlCommand command = new(commandTextHeader + commandText, Connection);
@@ -101,75 +112,40 @@ namespace ImageDB.SQL
                 Send(command);
             }
         }
-        public void Add(int imageId, int markerId, string marker)
-        {
-            string commandText = $@"EXEC [dbo].Add{marker} {imageId}, {markerId}";
-
-            SqlCommand command = new(commandText, Connection);
-            Send(command);
-        }
 		#endregion
 
-		#region Load
-		public IEnumerable<T> Load<T>() where T : IData, new()
+		public override void Clear()
 		{
-			string commandText = "SELECT * " +
-								$"FROM {Table} ";
+			base.Clear(join);
 
-			return Read<T>(commandText, columns);
+            Image.Clear();
 		}
-		public IEnumerable<T> Load<T>(string[] join) where T : IData, new()
+
+		#region Get
+		public override IEnumerable<T> Get<T>()
 		{
-            string commandText =   "SELECT * FROM [dbo].GetImageList();";
+            string commandText = "SELECT * FROM [dbo].ImageList;";
 
 			var allColumns = columns.Concat(join);
 			return Read<T>(commandText, allColumns);
 		}
-        public Dictionary<string, object> LoadById(int Id, string[] join)
-        {
-			string commandText = $@"SELECT * FROM [dbo].GetImageList() WHERE Id={Id};";
+
+        public virtual Dictionary<string, object> Get<T>(int Id) where T : IData, new()
+		{
+			string commandText = $@"SELECT * FROM [dbo].ImageList WHERE Id={Id};";
 
             var allColumns = columns.Concat(join);
 
-            return Read<Data>(commandText, allColumns).First().Parameter;
+            return Read<T>(commandText, allColumns).First().Parameter;
         }
 		#endregion
 
-		#region Update
-        public void Update<T>(T data) where T : Data
+        public Image Update(Image data)
         {
-            string commandText = $@"UPDATE {Table} SET Rating = {data.Parameter["Rating"]} WHERE Id = {data.Parameter["Id"]}";
-            Send(new(commandText, Connection));
-            Debug.WriteLine(commandText);
+            int index = Image.IndexOf(data);
+            Image[index] = new(Get<Image>(data.Id));
+            return Image[index];
         }
-		#endregion
-		public IEnumerable<T> Read<T>(string commandText, IEnumerable<string> columns) where T : IData, new()
-		{
-			IEnumerable<T> table = [];
-
-			try
-			{
-				T data;
-				SqlCommand command = new(commandText, Connection);
-				Connection.Open();
-				using var dataReader = command.ExecuteReader();
-				while (dataReader.Read())
-				{
-					data = new T();
-
-					foreach (var key in columns)
-						data.Parameter[key] = dataReader[key];
-
-					table = table.Append(data);
-				}
-			}
-			catch (Exception e)
-			{
-				MessageBox.Show(e.Message);
-			}
-			finally { Connection.Close(); }
-            return table;
-		}
 
 		#region Delete
 		public void Delete(int imageId)
@@ -181,22 +157,14 @@ namespace ImageDB.SQL
             SqlCommand command = new(commandText, Connection);
             Send(command);
         }
-        public void Delete(int imageId, int markerId)
-        {
-            string commandText = "DELETE \r\n" +
-                                $"FROM {Table} \r\n" +
-                                $"WHERE Tag_Id = {markerId}\r\n" +
-                                $"AND Image_Id = {imageId}";
-
-            SqlCommand command = new(commandText, Connection);
-            Send(command);
-        }
         
         public void Delete<T>(T data) where T : IData
         {
             string commandText = "DELETE \r\n" +
                                 $"FROM {Table} \r\n" +
                                 $"WHERE Id = {data.Parameter["Id"]}";
+
+            Image.Remove(data as Image);
 
             SqlCommand command = new(commandText, Connection);
             Send(command);
@@ -209,10 +177,12 @@ namespace ImageDB.SQL
                                     $"FROM {Table} \r\n" +
                                     $"WHERE Id = {_data.Parameter["Id"]}";
 
-                SqlCommand command = new(commandText, Connection);
+				Image.Remove(data as Image);
+
+				SqlCommand command = new(commandText, Connection);
                 Send(command);
             }
         }
 		#endregion
-    }
+	}
 }

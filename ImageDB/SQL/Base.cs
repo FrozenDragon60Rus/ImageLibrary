@@ -1,14 +1,14 @@
-﻿using System;
+﻿using ImageDB.Table;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Runtime.Versioning;
-using System.Windows.Forms;
+using System.Diagnostics;
+using System.Linq;
 
 namespace ImageDB.SQL
 {
-    [SupportedOSPlatform("Windows")]
-    public abstract class Base
+    public abstract class Base : IDisposable
     {
         protected readonly string Name,
                                   Server = @"FROZENDRAGON\SQLSERV",
@@ -35,6 +35,8 @@ namespace ImageDB.SQL
                   "Trusted_Connection=False; " +
                   "TrustServerCertificate=True;");
 
+        public abstract IEnumerable<T> Get<T>() where T : IData, new(); 
+
         protected void Send(SqlCommand command)
         {
             try
@@ -42,24 +44,24 @@ namespace ImageDB.SQL
                 Connection.Open();
                 command.ExecuteNonQuery();
             }
-            catch (Exception ex) { MessageBox.Show(ex.Message); }
+            catch (Exception ex) { Debug.WriteLine(ex.Message); }
             finally { Connection.Close(); }
         }
-        public void Clear()
+        public virtual void Clear()
         {
-            string commandText = $"DBCC CHECKIDENT(Image, RESEED, 0) " +
+            string commandText = $"DBCC CHECKIDENT({Table}, RESEED, 0) " +
                                  $@"DELETE FROM {Table}";
             SqlCommand command = new(commandText, Connection);
             Send(command);
         }
-		public void Clear(string[] join)
+		public virtual void Clear(string[] join)
 		{
 			Clear();
 			string commandText;
 			SqlCommand command;
 			foreach (var item in join)
 			{
-				commandText = $"DELETE FROM {Table}BY{item}\r\n;";
+				commandText = $"DELETE FROM ImageBY{item}\r\n;";
 				command = new(commandText, Connection);
 				Send(command);
 			}
@@ -78,5 +80,37 @@ namespace ImageDB.SQL
             Connection.Close();
             return [..column];
         }
-    }
+
+		public IEnumerable<T> Read<T>(string commandText, IEnumerable<string> columns) where T : IData, new()
+		{
+			IEnumerable<T> table = [];
+
+			try
+			{
+				T data;
+				SqlCommand command = new(commandText, Connection);
+				Connection.Open();
+				using var dataReader = command.ExecuteReader();
+				while (dataReader.Read())
+				{
+					data = new T();
+
+					foreach (var key in columns)
+						data.Parameter[key] = dataReader[key];
+
+					table = table.Append(data);
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine(e.Message);
+			}
+			finally { Connection.Close(); }
+			return table;
+		}
+		public void Dispose()
+		{
+			GC.SuppressFinalize(this);
+		}
+	}
 }
