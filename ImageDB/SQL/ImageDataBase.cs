@@ -2,14 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Data.SqlClient;
-using System.Windows;
 using ImageDB.Table;
 using System.Data;
 using System.Diagnostics;
-using System.Windows.Forms;
-using System.Threading.Tasks.Dataflow;
-using System.Runtime.CompilerServices;
-using System.CodeDom.Compiler;
 
 namespace ImageDB.SQL
 {

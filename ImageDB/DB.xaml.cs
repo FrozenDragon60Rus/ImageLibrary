@@ -28,7 +28,7 @@ namespace ImageDB
 
             DataInit();
 
-            FillTagButton();
+            FillMarkerButton(TagsGroup, join.First());
         }
 
         private void DataInit()
@@ -42,13 +42,13 @@ namespace ImageDB
 
             ImageData.Items.Refresh();
         }
-        private void FillTagButton()
+        private void FillMarkerButton(Grid group, string name)
         {
-            MarkerDataBase tag = new("ImageLibrary", join.First());
+            MarkerDataBase tag = new("ImageLibrary", name);
             List<Table.Marker> marker = tag.Get<Table.Marker>().ToList();
 
             foreach (Table.Marker Tag in marker)
-                TagsGroup.Children.Add(new MarkerButton(Tag.Name, Tag.Id, join.First(), AddEvent, RemoveEvent));
+                group.Children.Add(new MarkerButton(Tag.Name, Tag.Id, name, AddEvent, RemoveEvent));
         }
 
         private void ImageData_MouseDown(object sender, MouseButtonEventArgs e)
