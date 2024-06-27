@@ -21,7 +21,6 @@ namespace ImageDBTest
 		[StaFact]
 		public void FillTagButtonTest()
 		{
-			db = new();
 			var type = typeof(DB);
 			var flag = BindingFlags.Instance | BindingFlags.NonPublic;
 			var count = db.TagsGroup.Children.Count;
@@ -36,6 +35,23 @@ namespace ImageDBTest
 			fill?.Invoke(db, parameters: [db.TagsGroup, "Tag"]);
 
 			Assert.Equal(expected: count, db.TagsGroup.Children.Count);
+		}
+		[StaTheory
+			, InlineData(0)
+			, InlineData(2)
+			, InlineData(5)]
+		public void GetButtonIdTest(int index)
+		{
+			var type = typeof(DB);
+			var flag = BindingFlags.Instance | BindingFlags.NonPublic;
+			var id = type.GetMethod("GetButtonId", flag);
+
+			int expectedId = index + 1;
+			var button = db.TagsGroup.Children[index] as MarkerButton;
+
+			var buttonId = id?.Invoke(db, [button?.Content.ToString()]);
+
+			Assert.Equal(expectedId, buttonId);
 		}
 
 		public void Dispose()
